@@ -2,7 +2,6 @@ package com.bc.service;
 
 import com.bc.domain.ApplicationCryptogramRequest;
 import com.bc.domain.ApplicationCryptogramResponse;
-import com.bc.dto.GenerateACResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
