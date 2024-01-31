@@ -2,6 +2,10 @@ package com.bc.service;
 
 import com.bc.domain.ApplicationCryptogramRequest;
 import com.bc.domain.ApplicationCryptogramResponse;
+import com.bc.enumeration.CryptogramVersionNumber;
+import com.bc.enumeration.KeyType;
+import com.bc.utilities.DeterminePaymentScheme;
+import com.bc.utilities.EMVKeyDerivator;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
@@ -15,6 +19,19 @@ public class CryptogramFunctionsService {
         ApplicationCryptogramResponse applicationCryptogramResponse = new ApplicationCryptogramResponse();
         applicationCryptogramResponse.setApplicationCryptogram("AAAAAAAA");
         applicationCryptogramResponse.setApplicationCryptogramType("ARQC");
+        EMVKeyDerivator emvKeyDerivator = new EMVKeyDerivator();
+        emvKeyDerivator.setInputKey("F0F0F0F0F0F0F0F0");
+        emvKeyDerivator.setPan("4123456789011234");
+        emvKeyDerivator.setPanSequenceNumber("01");
+        emvKeyDerivator.setPaymentScheme(DeterminePaymentScheme.fromPan(emvKeyDerivator.getPan()).toString());
+        emvKeyDerivator.setInputKeyType(KeyType.CRYPTOGRAM_MASTER_KEY.name());
+        emvKeyDerivator.setCryptogramVersionNumber(CryptogramVersionNumber.MASTERCARD_CVN14.name());
+        if (emvKeyDerivator.generateKey()) {
+            System.out.println("Key successfully generated!");
+        } else {
+            System.out.println("Key generation failed!");
+        }
+
         return applicationCryptogramResponse;
     }
 

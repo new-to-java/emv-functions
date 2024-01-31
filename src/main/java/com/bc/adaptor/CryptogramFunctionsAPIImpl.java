@@ -39,7 +39,7 @@ public class CryptogramFunctionsAPIImpl implements CryptogramFunctionsAPI {
      */
     public Response generateApplicationCrptogram(@Valid GenerateACRequest generateACRequest){
         // Assumption is to use Hibernate validators with patterns to cover length+data checks and
-        // no service layer validation will be done.
+        // no service layer validation will be done as of now.
         ApplicationCryptogramRequest applicationCryptogramRequest =
                 generateACRequestMapper.mapToGenerateACRequest(generateACRequest);
         ApplicationCryptogramResponse applicationCryptogramResponse =
