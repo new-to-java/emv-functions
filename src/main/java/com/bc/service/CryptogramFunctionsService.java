@@ -24,8 +24,9 @@ public class CryptogramFunctionsService {
         emvKeyDerivator.setPan("4123456789011234");
         emvKeyDerivator.setPanSequenceNumber("01");
         emvKeyDerivator.setPaymentScheme(DeterminePaymentScheme.fromPan(emvKeyDerivator.getPan()).toString());
-        emvKeyDerivator.setInputKeyType(KeyType.CRYPTOGRAM_MASTER_KEY.name());
+        emvKeyDerivator.setInputKeyType(KeyType.CRYPTOGRAM_MASTER_KEY.toString());
         emvKeyDerivator.setCryptogramVersionNumber(CryptogramVersionNumber.MASTERCARD_CVN14.name());
+        emvKeyDerivator.setKeyToGenerate(KeyType.UNIQUE_DERIVATION_KEY.toString());
         if (emvKeyDerivator.generateKey()) {
             System.out.println("Key successfully generated!");
         } else {
