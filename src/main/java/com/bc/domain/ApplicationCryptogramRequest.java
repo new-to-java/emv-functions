@@ -26,4 +26,28 @@ public class ApplicationCryptogramRequest {
     private String applicationTransactionCounter;
     private String issuerApplicationData;
 
+    /**
+     * Override method for the object's default toString method.
+     * @return String representing object's attribute values.
+     */
+    @Override
+    public String toString() {
+        return "{" +
+                "pan='" + pan + '\'' +
+                ", panSequenceNumber='" + panSequenceNumber + '\'' +
+                ", cryptogramMasterKey='" + cryptogramMasterKey + '\'' +
+                ", amountAuthorised='" + amountAuthorised + '\'' +
+                ", amountOther='" + amountOther + '\'' +
+                ", terminalCountryCode='" + terminalCountryCode + '\'' +
+                ", terminalVerificationResults='" + terminalVerificationResults + '\'' +
+                ", transactionCurrencyCode='" + transactionCurrencyCode + '\'' +
+                ", transactionDate='" + transactionDate + '\'' +
+                ", transactionType='" + transactionType + '\'' +
+                ", unpredictableNumber='" + unpredictableNumber + '\'' +
+                ", applicationInterchangeProfile='" + applicationInterchangeProfile + '\'' +
+                ", applicationTransactionCounter='" + applicationTransactionCounter + '\'' +
+                ", issuerApplicationData='" + issuerApplicationData + '\'' +
+                '}';
+    }
+
 }

@@ -21,6 +21,8 @@ public class DeterminePaymentScheme {
                     return PaymentScheme.VISA;
                 case PAN_FIRST_DIGIT_IS_FIVE:
                     return PaymentScheme.MASTERCARD;
+                case PAN_FIRST_DIGIT_IS_SIX:
+                    return PaymentScheme.PRIVATELABEL;
                 default:
                     return PaymentScheme.UNKNOWN;
             }

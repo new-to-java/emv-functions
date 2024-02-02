@@ -1,14 +1,13 @@
 package com.bc.utilities;
 
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-
-import java.nio.ByteBuffer;
 
 /**
  * This class defines methods for performing Exclusive Or operation against two hexadecimal values
@@ -16,37 +15,35 @@ import java.nio.ByteBuffer;
  */
 @Getter
 @Setter
+@Slf4j
 public class Xor {
-
     @NotEmpty
     @Pattern(regexp = "^[\\da-fA-F]+$")
     private String leftOperand;
     @NotEmpty
     @Pattern(regexp = "^[\\da-fA-F]+$")
     private String rightOperand;
-
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private StringBuilder xOredValue = new StringBuilder();
     /**
      * Method that perform XOR function on two hexadecimal strings passed.
      */
     public String doXor() {
-        StringBuilder xOredValue = new StringBuilder();
         // Check if object state is valid or not
         if(isValidObject()) {
-            // Try Xor operation
+            // Convert left and right operands to bytearray and try Xor operation on each byte
             try {
                 byte [] leftOperandBytes = Hex.decodeHex(leftOperand);
                 byte [] rightOperandBytes = Hex.decodeHex(rightOperand);
-                System.out.println("Length of left operand bytes: " + leftOperandBytes.length);
                 for (int i = 0; i < leftOperandBytes.length; i++) {
                     xOredValue.append(Hex.encodeHexString(new byte[]{(byte) (leftOperandBytes[i] ^ rightOperandBytes[i])}));
                 }
             } catch (DecoderException decoderException) {
-                throw new RuntimeException("Hexadecimal decoding to byte array failed!");
+                throw new RuntimeException(this.getClass() +  " - Data decoding to byte array failed - "
+                        + decoderException.getCause() + " - " + decoderException.getMessage());
             } finally {
-                System.out.println("Left operand value: " + leftOperand);
-                System.out.println("Right operand value: " + rightOperand);
-                System.out.println("XOR Length: " + xOredValue.length());
-                System.out.println("XOR Value: " + xOredValue);
+                debugLog();
             }
             return xOredValue.toString();
         }
@@ -64,6 +61,26 @@ public class Xor {
             leftOperand = Padding.padString(leftOperand, "0", rightOperand.length(), true);
         }
         return xorSelfValidator.isAValidObject(this);
+    }
+    /**
+     * Override method for the object's default toString method.
+     * @return String representing object's attribute values.
+     */
+    @Override
+    public String toString() {
+        return "{" +
+                "leftOperand='" + leftOperand + '\'' +
+                ", rightOperand='" + rightOperand + '\'' +
+                ", xOredValue=" + xOredValue +
+                '}';
+    }
+    /**
+     * Method for logging the input data and output data for the Xor function, when the debug log level is enabled.
+     */
+    private void debugLog(){
+        if (log.isDebugEnabled()) {
+            log.debug(" Debug log : {}", this);
+        }
     }
 
 }
