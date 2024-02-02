@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -42,7 +41,6 @@ public class TripleDES {
     public String encrypt(){
 
         initialize(ENCRYPT);
-        initializeForDesEncryption();
 
         byte [] decodedInputData = decodeinputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
@@ -59,7 +57,7 @@ public class TripleDES {
     public String decrypt(){
 
         initialize(DECRYPT);
-        initializeForDesDecryption();
+
         byte [] decodedInputData = decodeinputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
@@ -77,6 +75,11 @@ public class TripleDES {
 
         initializeDESAlgorithm();
         initializeDESedeKey();
+        if (encrypt) {
+            initializeForDesEncryption();
+        } else {
+            initializeForDesDecryption();
+        }
 
     }
     /**
