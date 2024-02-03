@@ -103,7 +103,7 @@ public class EMVKeyDerivator {
         }
     }
     /**
-     * Driver method for deriving the requested TDEA key from the TDEA key.
+     * Driver method for deriving the requested TDEA key from the Master key.
      */
     private String deriveRequestedKey(){
         switch (KeyType.valueOf(keyToGenerate)){
