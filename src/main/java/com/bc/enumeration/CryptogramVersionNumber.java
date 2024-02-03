@@ -5,7 +5,10 @@ package com.bc.enumeration;
  */
 public enum CryptogramVersionNumber {
 
+    VISA_CVN10,
     VISA_CVN18,
+    VISA_CVN22,
+    MASTERCARD_CVN10,
     MASTERCARD_CVN14;
 
 }

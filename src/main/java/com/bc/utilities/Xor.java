@@ -25,7 +25,7 @@ public class Xor {
     private String rightOperand;
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    private StringBuilder xOredValue = new StringBuilder();
+    private StringBuilder result = new StringBuilder();
     /**
      * Method that perform XOR function on two hexadecimal strings passed.
      */
@@ -37,7 +37,7 @@ public class Xor {
                 byte [] leftOperandBytes = Hex.decodeHex(leftOperand);
                 byte [] rightOperandBytes = Hex.decodeHex(rightOperand);
                 for (int i = 0; i < leftOperandBytes.length; i++) {
-                    xOredValue.append(Hex.encodeHexString(new byte[]{(byte) (leftOperandBytes[i] ^ rightOperandBytes[i])}));
+                    result.append(Hex.encodeHexString(new byte[]{(byte) (leftOperandBytes[i] ^ rightOperandBytes[i])}));
                 }
             } catch (DecoderException decoderException) {
                 throw new RuntimeException(this.getClass() +  " - Data decoding to byte array failed - "
@@ -45,7 +45,7 @@ public class Xor {
             } finally {
                 debugLog();
             }
-            return xOredValue.toString();
+            return result.toString();
         }
         return null;
     }
@@ -54,13 +54,17 @@ public class Xor {
      * the input attributes and ensure all the input attributes are set as required.
      */
     private boolean isValidObject(){
+
         SelfValidator<Xor> xorSelfValidator = new SelfValidator<>();
+
+        // Pad operands to the left with "0" to match the length of the longest operand.
         if (leftOperand.length() > rightOperand.length()){
             rightOperand = Padding.padString(rightOperand, "0", leftOperand.length(), true);
         } else if(leftOperand.length() < rightOperand.length()){
             leftOperand = Padding.padString(leftOperand, "0", rightOperand.length(), true);
         }
         return xorSelfValidator.isAValidObject(this);
+
     }
     /**
      * Override method for the object's default toString method.
@@ -71,7 +75,7 @@ public class Xor {
         return "{" +
                 "leftOperand='" + leftOperand + '\'' +
                 ", rightOperand='" + rightOperand + '\'' +
-                ", xOredValue=" + xOredValue +
+                ", result=" + result +
                 '}';
     }
     /**

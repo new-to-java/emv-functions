@@ -18,6 +18,9 @@ public class CryptogramFunctionsService {
     public ApplicationCryptogramResponse generateAC(ApplicationCryptogramRequest applicationCryptogramRequest){
         debugLog(applicationCryptogramRequest);
         EMVKeyDerivator emvKeyDerivator = buildUDKGenerationRequest(applicationCryptogramRequest);
+        debugLog(emvKeyDerivator);
+        String udkGenerated = emvKeyDerivator.generateKey();
+        emvKeyDerivator = buildSessionKeyGenerationRequest(applicationCryptogramRequest, udkGenerated);
         return buildGenerateACResponse(emvKeyDerivator);
     }
     /**
@@ -29,7 +32,6 @@ public class CryptogramFunctionsService {
 
         ApplicationCryptogramResponse applicationCryptogramResponse = new ApplicationCryptogramResponse();
         String ARQC = "ARQC";
-
         applicationCryptogramResponse.setApplicationCryptogram(emvKeyDerivator.generateKey());
         applicationCryptogramResponse.setApplicationCryptogramType(ARQC);
 
@@ -37,8 +39,8 @@ public class CryptogramFunctionsService {
 
     }
     /**
-     * Build a mapping for generating a Unique Derivation Key from the desired attributes from
-     * ApplicationCrypotgramRequest and set the other input attributes as required.
+     * Build a mapping for generating a Unique Derivation Key. This method uses attributes from
+     * ApplicationCrypotgramRequest object and sets other input attributes as necessary.
      * @param applicationCryptogramRequest ApplicationCryptogramRequest object built from request.
      * @return EMVKeyDerivator object mapped for UDK generation.
      */
@@ -48,10 +50,34 @@ public class CryptogramFunctionsService {
         emvKeyDerivator.setInputKey(applicationCryptogramRequest.getCryptogramMasterKey());
         emvKeyDerivator.setPan(applicationCryptogramRequest.getPan());
         emvKeyDerivator.setPanSequenceNumber(applicationCryptogramRequest.getPanSequenceNumber());
+        emvKeyDerivator.setApplicationTransactionCounter(applicationCryptogramRequest.getApplicationTransactionCounter());
         emvKeyDerivator.setPaymentScheme(DeterminePaymentScheme.fromPan(emvKeyDerivator.getPan()).toString());
         emvKeyDerivator.setInputKeyType(KeyType.CRYPTOGRAM_MASTER_KEY.toString());
-        emvKeyDerivator.setCryptogramVersionNumber(CryptogramVersionNumber.MASTERCARD_CVN14.name());
+        emvKeyDerivator.setCryptogramVersionNumber(CryptogramVersionNumber.VISA_CVN18.name());
         emvKeyDerivator.setKeyToGenerate(KeyType.UNIQUE_DERIVATION_KEY.toString());
+
+        return emvKeyDerivator;
+
+    }
+    /**
+     * Build a mapping for generating a Session Key. This method uses attributes from
+     * ApplicationCrypotgramRequest and the UDK generated and sets other input attributes as necessary.
+     * @param applicationCryptogramRequest ApplicationCryptogramRequest object built from request.
+     * @param uniqueDerivationKey UDK generated.
+     * @return EMVKeyDerivator object mapped for Session Key generation.
+     */
+    private EMVKeyDerivator buildSessionKeyGenerationRequest(ApplicationCryptogramRequest applicationCryptogramRequest,
+                                                             String uniqueDerivationKey){
+
+        EMVKeyDerivator emvKeyDerivator = new EMVKeyDerivator();
+        emvKeyDerivator.setInputKey(uniqueDerivationKey);
+        emvKeyDerivator.setPan(applicationCryptogramRequest.getPan());
+        emvKeyDerivator.setPanSequenceNumber(applicationCryptogramRequest.getPanSequenceNumber());
+        emvKeyDerivator.setApplicationTransactionCounter(applicationCryptogramRequest.getApplicationTransactionCounter());
+        emvKeyDerivator.setPaymentScheme(DeterminePaymentScheme.fromPan(emvKeyDerivator.getPan()).toString());
+        emvKeyDerivator.setInputKeyType(KeyType.UNIQUE_DERIVATION_KEY.name());
+        emvKeyDerivator.setCryptogramVersionNumber(CryptogramVersionNumber.VISA_CVN18.name());
+        emvKeyDerivator.setKeyToGenerate(KeyType.SESSION_KEY.name());
 
         return emvKeyDerivator;
 
