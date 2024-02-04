@@ -101,8 +101,8 @@ public class EMVKeyDerivator {
         // Build UDK B component
         udkKeyBComponent = getUdkKeyBComponent(udkKeyAComponent);
         // Build UDK Key A and UDK Key B
-        udkKeyA = tripleDESEncypt(udkKeyAComponent, inputKey);
-        udkKeyB = tripleDESEncypt(udkKeyBComponent, inputKey);
+        udkKeyA = tripleDESEncrypt(udkKeyAComponent, inputKey);
+        udkKeyB = tripleDESEncrypt(udkKeyBComponent, inputKey);
         log.info(this.getClass() + " Unique Derivation Key components generated: Component A {} / Component B {}.", udkKeyAComponent, udkKeyBComponent);
         log.info(this.getClass() + " Unique Derivation Key: Key A {} / Key B {}.", udkKeyA, udkKeyB);
         return udkKeyA + udkKeyB;
@@ -137,7 +137,7 @@ public class EMVKeyDerivator {
      * @param inputKey Triple DES Key to encrypt the data.
      * @return Encrypted data String.
      */
-    private String tripleDESEncypt(String inputData, String inputKey) {
+    private String tripleDESEncrypt(String inputData, String inputKey) {
 
         TripleDES tripleDES = new TripleDES();
         tripleDES.setInputData(inputData);
@@ -194,10 +194,10 @@ public class EMVKeyDerivator {
         String emvCskKeyA, emvCskKeyB;
         // Get UDK Key A and build EMV CS Key A Component
         emvCskKeyAComponent = getEMVCommonSessionKeyAComponent();
-        emvCskKeyA = tripleDESEncypt(emvCskKeyAComponent, inputKey);
+        emvCskKeyA = tripleDESEncrypt(emvCskKeyAComponent, inputKey);
         // Get UDK Key B and build EMV CS Key B Component
         emvCskKeyBComponent = getEMVCommonSessionKeyBComponent();
-        emvCskKeyB = tripleDESEncypt(emvCskKeyBComponent, inputKey);
+        emvCskKeyB = tripleDESEncrypt(emvCskKeyBComponent, inputKey);
         // Return generated EMV CSK method session key
         log.info(this.getClass() + " Session Key components generated: Component A {} / Component B {}.", emvCskKeyAComponent, emvCskKeyBComponent);
         log.info(this.getClass() + " Session Key generated: Key A {} / Key B {}.", emvCskKeyA, emvCskKeyB);

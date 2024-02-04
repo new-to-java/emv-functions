@@ -175,17 +175,17 @@ public class ApplicationCryptogramGenerator {
         for (String arqcData : splitArqcData) {
             // Skip XOR operation for first segment of ARQC data.
             if (loopCounter == 0) {
-                encryptedData = tripleDESEncypt(arqcData, sessionKeyA);
+                encryptedData = tripleDESEncrypt(arqcData, sessionKeyA);
             } else { // Perform XOR operation with previously encrypted data segment for all remaining segments, prior to doing encryption.
                 encryptedData = performXor(encryptedData, arqcData);
-                encryptedData = tripleDESEncypt(encryptedData, sessionKeyA);
+                encryptedData = tripleDESEncrypt(encryptedData, sessionKeyA);
             }
             loopCounter += 1;
         }
         // All data segments have been processed, now decrypt the encryptedData using sessionKeyB
         encryptedData = tripleDESDecrypt(encryptedData, sessionKeyB);
         // Encrypt the SessionKeyB decrypted data using SessionKeyA to generate the ARQC.
-        encryptedData = tripleDESEncypt(encryptedData, sessionKeyA);
+        encryptedData = tripleDESEncrypt(encryptedData, sessionKeyA);
         log.info(this.getClass() + " - ARQC Generated :" + encryptedData);
 
         return encryptedData;
@@ -214,7 +214,7 @@ public class ApplicationCryptogramGenerator {
      * @param inputKey Triple DES Key to encrypt the data.
      * @return Encrypted data String.
      */
-    private String tripleDESEncypt(String inputData, String inputKey) {
+    private String tripleDESEncrypt(String inputData, String inputKey) {
 
         TripleDES tripleDES = new TripleDES();
         tripleDES.setInputData(inputData);
