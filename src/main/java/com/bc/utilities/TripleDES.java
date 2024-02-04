@@ -29,6 +29,8 @@ public class TripleDES {
     private final boolean ENCRYPT = true;
     private final boolean DECRYPT = false;
     @Setter(AccessLevel.NONE)
+    private String workTdeaInputKey;
+    @Setter(AccessLevel.NONE)
     private Cipher des;
     @Setter(AccessLevel.NONE)
     private Key secretKey;
@@ -109,7 +111,8 @@ public class TripleDES {
      */
     private void initializeDESedeKey() {
         try {
-            secretKey = new SecretKeySpec(Hex.decodeHex(key), DESEDE);
+            convertToTripleLengthTDEAKey();
+            secretKey = new SecretKeySpec(Hex.decodeHex(workTdeaInputKey), DESEDE);
         } catch (DecoderException decoderException){
             debugLog();
             throw new RuntimeException(this.getClass() + " - Key decoding to byte array failed - "
@@ -168,6 +171,26 @@ public class TripleDES {
                     + cipherException.getCause() + " - " + cipherException.getMessage());
         }
 
+    }
+    /**
+     * Method to convert a single or double length TDEA key to a triple length TDEA key.
+     * Note: Parity check is not implemented and will be done in a future release.
+     */
+    private void convertToTripleLengthTDEAKey(){
+        final int KEY_LENGTH_TDEA_SINGLE = 16;
+        final int KEY_LENGTH_TDEA_DOUBLE = 32;
+        if (key.length() == KEY_LENGTH_TDEA_SINGLE) {
+            workTdeaInputKey = key + key + key;
+            log.info("Single length TDEA Key received: " + key);
+            log.info("Expanded triple length TDEA Key: " + workTdeaInputKey);
+        } else if (key.length() == KEY_LENGTH_TDEA_DOUBLE) {
+            workTdeaInputKey = key + key.substring(0, KEY_LENGTH_TDEA_SINGLE);
+            log.info("Double length TDEA Key received: " + key);
+            log.info("Expanded triple length TDEA Key: " + workTdeaInputKey);
+        } else {
+            workTdeaInputKey = key;
+            log.info("Triple length TDEA Key received: " + key + ". No key expansion performed!");
+        }
     }
     /**
      * Override method for the object's default toString method.

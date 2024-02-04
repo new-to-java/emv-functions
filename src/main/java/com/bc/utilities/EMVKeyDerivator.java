@@ -5,7 +5,6 @@ import com.bc.enumeration.KeyType;
 import com.bc.enumeration.PaymentScheme;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,20 +42,10 @@ public class EMVKeyDerivator {
     @NotEmpty
     @Pattern(regexp = "^(UNIQUE_DERIVATION_KEY|SESSION_KEY)$")
     private String keyToGenerate;
-    //Work attributes
-    @Setter(AccessLevel.NONE)
-    @Getter(AccessLevel.NONE)
-    private String workTdeaInputKey;
-    @Setter(AccessLevel.NONE)
-    @Getter(AccessLevel.NONE)
-    private static int KEY_LENGTH_TDEA_SINGLE = 16;
-    @Setter(AccessLevel.NONE)
-    @Getter(AccessLevel.NONE)
-    private static int KEY_LENGTH_TDEA_DOUBLE = 32;
-    @Setter(AccessLevel.NONE)
-    @Getter(AccessLevel.NONE)
-    private static int KEY_LENGTH_TDEA_TRIPLE = 48;
 
+    /**
+     * Constructor
+     */
     public EMVKeyDerivator(){
         inputKey = null;
         inputKeyType = null;
@@ -71,7 +60,6 @@ public class EMVKeyDerivator {
      */
     public String generateKey() {
         if (objectIsValid()) {
-            convertToTripleLengthTDEAKey();
             debugLog();
             return getRequestedKey();
         } else {
@@ -88,24 +76,6 @@ public class EMVKeyDerivator {
         return emvKeyDerivatorSelfValidator.isAValidObject(this);
     }
     /**
-     * Method to convert a single or double length TDEA key to a triple length TDEA key.
-     * Note: Parity check is not implemented and will be done in a future release.
-     */
-    private void convertToTripleLengthTDEAKey(){
-        if (inputKey.length() == KEY_LENGTH_TDEA_SINGLE) {
-            workTdeaInputKey = inputKey + inputKey + inputKey;
-            log.info("Single length TDEA Key received: " + inputKey);
-            log.info("Expanded triple length TDEA Key: " + workTdeaInputKey);
-        } else if (inputKey.length() == KEY_LENGTH_TDEA_DOUBLE) {
-            workTdeaInputKey = inputKey + inputKey.substring(0, KEY_LENGTH_TDEA_SINGLE);
-            log.info("Double length TDEA Key received: " + inputKey);
-            log.info("Expanded triple length TDEA Key: " + workTdeaInputKey);
-        } else {
-            workTdeaInputKey = inputKey;
-            log.info("Triple length TDEA Key received: " + inputKey + ". No key expansion performed!");
-        }
-    }
-    /**
      * Driver method for deriving the requested TDEA key from the Master key.
      */
     private String getRequestedKey(){
@@ -113,6 +83,7 @@ public class EMVKeyDerivator {
             case UNIQUE_DERIVATION_KEY:
                 return getUniqueDerivationKey();
             case SESSION_KEY:
+                log.info("Session key request received!");
                 return getSessionKey();
         }
         return null;
@@ -122,6 +93,7 @@ public class EMVKeyDerivator {
      * as described in EMV Book 2 - A1.4.1 (reference version: v4.1).
      */
     private String getUniqueDerivationKey() {
+
         String udkKeyAComponent, udkKeyBComponent;
         String udkKeyA, udkKeyB;
         // Build UDK A component
@@ -129,9 +101,12 @@ public class EMVKeyDerivator {
         // Build UDK B component
         udkKeyBComponent = getUdkKeyBComponent(udkKeyAComponent);
         // Build UDK Key A and UDK Key B
-        udkKeyA = tripleDESEncypt(udkKeyAComponent, workTdeaInputKey);
-        udkKeyB = tripleDESEncypt(udkKeyBComponent, workTdeaInputKey);
+        udkKeyA = tripleDESEncypt(udkKeyAComponent, inputKey);
+        udkKeyB = tripleDESEncypt(udkKeyBComponent, inputKey);
+        log.info(this.getClass() + " Unique Derivation Key components generated: Component A {} / Component B {}.", udkKeyAComponent, udkKeyBComponent);
+        log.info(this.getClass() + " Unique Derivation Key: Key A {} / Key B {}.", udkKeyA, udkKeyB);
         return udkKeyA + udkKeyB;
+
     }
     /**
      * Method used to build the UDK Key A component.
@@ -179,7 +154,7 @@ public class EMVKeyDerivator {
         switch (PaymentScheme.valueOf(paymentScheme)){
             case VISA:
             case PRIVATELABEL:
-                return getSessionKeyDerivationMethodForVisa();
+                return getSessionKeyForVisa();
             case MASTERCARD:
                 return null;
             default:
@@ -188,18 +163,20 @@ public class EMVKeyDerivator {
 
     }
     /**
-     * Method used to determine the Session Key Derivation method to be used for Visa payment scheme.
-     * @return Session Key Derivation method to use.
+     * Method used to generate the Session Key to be used for Visa payment scheme Application Cryptogram generation.
+     * @return Session Key generated.
      */
-    private String getSessionKeyDerivationMethodForVisa() {
+    private String getSessionKeyForVisa() {
 
         switch (CryptogramVersionNumber.valueOf(cryptogramVersionNumber)) {
             // For Visa CVN10 cards, use UDK itself as Session Key.
             case VISA_CVN10:
+                log.info("CVN10 - Session key request received!");
                 return inputKey;
             // For Visa CVN18 and CVN22 cards, use EMV CSK method to derive a Session Key.
             case VISA_CVN18:
             case VISA_CVN22:
+                log.info("CVN - 18/22 Session key request received!");
                 return getEMVCommonSessionKeyDerivationMethodBasedKey();
             default:
                 return null;
@@ -217,10 +194,10 @@ public class EMVKeyDerivator {
         String emvCskKeyA, emvCskKeyB;
         // Get UDK Key A and build EMV CS Key A Component
         emvCskKeyAComponent = getEMVCommonSessionKeyAComponent();
-        emvCskKeyA = tripleDESEncypt(emvCskKeyAComponent, workTdeaInputKey);
+        emvCskKeyA = tripleDESEncypt(emvCskKeyAComponent, inputKey);
         // Get UDK Key B and build EMV CS Key B Component
         emvCskKeyBComponent = getEMVCommonSessionKeyBComponent();
-        emvCskKeyB = tripleDESEncypt(emvCskKeyBComponent, workTdeaInputKey);
+        emvCskKeyB = tripleDESEncypt(emvCskKeyBComponent, inputKey);
         // Return generated EMV CSK method session key
         log.info(this.getClass() + " Session Key components generated: Component A {} / Component B {}.", emvCskKeyAComponent, emvCskKeyBComponent);
         log.info(this.getClass() + " Session Key generated: Key A {} / Key B {}.", emvCskKeyA, emvCskKeyB);
@@ -261,7 +238,6 @@ public class EMVKeyDerivator {
                 ", paymentScheme='" + paymentScheme + '\'' +
                 ", cryptogramVersionNumber='" + cryptogramVersionNumber + '\'' +
                 ", keyToGenerate='" + keyToGenerate + '\'' +
-                ", workTdeaInputKey='" + workTdeaInputKey + '\'' +
                 '}';
     }
     /**
