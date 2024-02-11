@@ -1,13 +1,13 @@
-package com.bc.adaptor;
+package com.bc.adapter.in.rest.cryptogramfunctions;
 
-import com.bc.domain.ApplicationCryptogramRequest;
-import com.bc.domain.ApplicationCryptogramResponse;
-import com.bc.dto.GenerateACRequest;
-import com.bc.dto.GenerateACResponse;
-import com.bc.mapper.GenerateACRequestMapper;
-import com.bc.mapper.GenerateACResponseMapper;
-import com.bc.port.CryptogramFunctionsAPI;
-import com.bc.service.CryptogramFunctionsService;
+import com.bc.application.domain.ApplicationCryptogramRequest;
+import com.bc.application.domain.ApplicationCryptogramResponse;
+import com.bc.model.dto.GenerateACRequest;
+import com.bc.model.dto.GenerateACResponse;
+import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestMapper;
+import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACResponseMapper;
+import com.bc.application.port.in.rest.cryptogramfunctions.client.CryptogramFunctionsAPI;
+import com.bc.application.service.CryptogramFunctionsService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -17,7 +17,7 @@ import jakarta.ws.rs.core.Response;
  * REST API interface adaptor implementing the endpoints and methods that will host various EMV cryptogram functions.
  */
 @ApplicationScoped
-public class CryptogramFunctionsAPIImpl implements CryptogramFunctionsAPI {
+public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
     // Service - Pending build and injection
     @Inject
     CryptogramFunctionsService cryptogramFunctionsService;

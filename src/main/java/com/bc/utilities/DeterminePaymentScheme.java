@@ -1,8 +1,8 @@
 package com.bc.utilities;
 
-import com.bc.enumeration.PaymentScheme;
+import com.bc.application.enumeration.PaymentScheme;
 
-import static com.bc.constants.PaymentSchemeConstants.*;
+import static com.bc.model.constants.PaymentSchemeConstants.*;
 
 /**
  * This utility class contains static methods that can be used for determining payment scheme.
@@ -23,8 +23,6 @@ public class DeterminePaymentScheme {
                     return PaymentScheme.MASTERCARD;
                 case PAN_FIRST_DIGIT_IS_SIX:
                     return PaymentScheme.PRIVATELABEL;
-                default:
-                    return PaymentScheme.UNKNOWN;
             }
         }
         return PaymentScheme.UNKNOWN;

@@ -43,11 +43,10 @@ public class TripleDES {
     public String encrypt(){
 
         initialize(ENCRYPT);
-
+        debugLog();
         byte [] decodedInputData = decodeinputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
-        debugLog();
 
         return outputData;
 
@@ -59,11 +58,10 @@ public class TripleDES {
     public String decrypt(){
 
         initialize(DECRYPT);
-
+        debugLog();
         byte [] decodedInputData = decodeinputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
-        debugLog();
 
         return outputData;
 
@@ -181,15 +179,15 @@ public class TripleDES {
         final int KEY_LENGTH_TDEA_DOUBLE = 32;
         if (key.length() == KEY_LENGTH_TDEA_SINGLE) {
             workTdeaInputKey = key + key + key;
-            log.info("Single length TDEA Key received: " + key);
-            log.info("Expanded triple length TDEA Key: " + workTdeaInputKey);
+            log.debug("Single length TDEA Key received: " + key);
+            log.debug("Expanded triple length TDEA Key: " + workTdeaInputKey);
         } else if (key.length() == KEY_LENGTH_TDEA_DOUBLE) {
             workTdeaInputKey = key + key.substring(0, KEY_LENGTH_TDEA_SINGLE);
-            log.info("Double length TDEA Key received: " + key);
-            log.info("Expanded triple length TDEA Key: " + workTdeaInputKey);
+            log.debug("Double length TDEA Key received: " + key);
+            log.debug("Expanded triple length TDEA Key: " + workTdeaInputKey);
         } else {
             workTdeaInputKey = key;
-            log.info("Triple length TDEA Key received: " + key + ". No key expansion performed!");
+            log.debug("Triple length TDEA Key received: " + key + ". No key expansion performed!");
         }
     }
     /**
@@ -207,7 +205,7 @@ public class TripleDES {
 
     }
     /**
-     * Method for logging the input data and output data for the EMVKeyDerivator function, when the debug log level is enabled.
+     * Method for logging the input data and output data for the EMVUniqueDerivationKeyDerivator function, when the debug log level is enabled.
      */
     private void debugLog(){
 

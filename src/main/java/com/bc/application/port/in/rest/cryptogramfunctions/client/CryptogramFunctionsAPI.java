@@ -1,6 +1,6 @@
-package com.bc.port;
+package com.bc.application.port.in.rest.cryptogramfunctions.client;
 
-import com.bc.dto.GenerateACRequest;
+import com.bc.model.dto.GenerateACRequest;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;

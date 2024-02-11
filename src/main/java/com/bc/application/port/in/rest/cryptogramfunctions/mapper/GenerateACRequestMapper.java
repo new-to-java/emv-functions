@@ -1,8 +1,8 @@
-package com.bc.mapper;
+package com.bc.application.port.in.rest.cryptogramfunctions.mapper;
 
 
-import com.bc.domain.ApplicationCryptogramRequest;
-import com.bc.dto.GenerateACRequest;
+import com.bc.application.domain.ApplicationCryptogramRequest;
+import com.bc.model.dto.GenerateACRequest;
 import org.mapstruct.Mapper;
 
 /**

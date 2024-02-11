@@ -1,4 +1,4 @@
-package com.bc.domain;
+package com.bc.application.domain;
 
 import lombok.Getter;
 import lombok.Setter;

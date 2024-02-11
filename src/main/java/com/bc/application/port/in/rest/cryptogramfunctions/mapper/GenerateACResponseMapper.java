@@ -1,7 +1,7 @@
-package com.bc.mapper;
+package com.bc.application.port.in.rest.cryptogramfunctions.mapper;
 
-import com.bc.domain.ApplicationCryptogramResponse;
-import com.bc.dto.GenerateACResponse;
+import com.bc.application.domain.ApplicationCryptogramResponse;
+import com.bc.model.dto.GenerateACResponse;
 import org.mapstruct.Mapper;
 
 /**

@@ -1,4 +1,4 @@
-package com.bc.dto;
+package com.bc.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -11,8 +11,8 @@ public class GenerateACRequest {
     public String pan;
     @JsonProperty("PanSequenceNumber")
     public String panSequenceNumber;
-    @JsonProperty("CryptogramMasterKey")
-    public String cryptogramMasterKey;
+    @JsonProperty("IssuerMasterKey")
+    public String issuerMasterKey;
     @JsonProperty("AmountAuthorised")
     public String amountAuthorised;
     @JsonProperty("AmountOther")

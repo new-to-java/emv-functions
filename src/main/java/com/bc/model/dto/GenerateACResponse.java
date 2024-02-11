@@ -1,4 +1,4 @@
-package com.bc.dto;
+package com.bc.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class GenerateACResponse {
 
-    @JsonProperty("ApplicationCryptogram")
+    @JsonProperty("ApplicationCryptogramRequest")
     public String applicationCryptogram;
     @JsonProperty("ApplicationCryptogramType")
     public String applicationCryptogramType;

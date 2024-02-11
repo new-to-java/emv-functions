@@ -1,10 +1,9 @@
 package com.bc.utilities;
 
-import com.bc.domain.ApplicationCryptogramRequest;
+import com.bc.application.domain.ApplicationCryptogramRequest;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Class defining methods for generating an Application Cryptogram (ARQC) for Visa and Mastercard Payment Schemes.
@@ -18,26 +17,17 @@ public class ApplicationCryptogramGenerator {
      * @return Application Cryptogram (ARQC).
      */
     public String getVisaApplicationCryptogram(ApplicationCryptogramRequest applicationCryptogramRequest, String sessionKey){
-        VisaIADParser visaIADParser = getParsedVisaIAD(applicationCryptogramRequest.getIssuerApplicationData());
+        VisaIADParser visaIADParser = new VisaIADParser();
+        visaIADParser.setIssuerApplicationData(applicationCryptogramRequest.getIssuerApplicationData());
+        visaIADParser.parseIad();
         String transactionData = buildVisaTransactionData(applicationCryptogramRequest, visaIADParser);
-        if (Objects.equals(visaIADParser.getCryptogramVersionNumber(), "10")){
-            transactionData = padTransactionDataISO_IEC_9797_1(transactionData);
+        if (visaIADParser.getCryptogramVersionNumber().isCVN10()){
+            transactionData = ISOIEC97971Padding.performIsoIec97971Method1Padding(transactionData);
         } else {
-            transactionData = padTransactionDataISO_IEC_9797_2(transactionData);
+            transactionData = ISOIEC97971Padding.performIsoIec97971Method2Padding(transactionData);
         }
         return generateArqc(transactionData, sessionKey);
 
-    }
-    /**
-     * Method to extract and parse Issuer Application Data (IAD).
-     * @param issuerApplicationData IAD from request.
-     * @return Parsed IAD object.
-     */
-    private VisaIADParser getParsedVisaIAD(String issuerApplicationData) {
-        VisaIADParser visaIADParser = new VisaIADParser();
-        visaIADParser.setIssuerApplicationData(issuerApplicationData);
-        visaIADParser.parseIad();
-        return visaIADParser;
     }
     /**
      * Generate Visa transaction data for Application Cryptogram generation.
@@ -67,16 +57,16 @@ public class ApplicationCryptogramGenerator {
         //  9. Application Interchange Profile  - Length: 4 characters
         transactionData.append(applicationCryptogramRequest.getApplicationInterchangeProfile());
         // 10. Application Transaction Counter  - Length: 4 characters
-        transactionData.append(applicationCryptogramRequest.getApplicationTransactionCounter());
+        transactionData.append(getAndFormatApplicationTransactionCounter(applicationCryptogramRequest.getApplicationTransactionCounter()));
         // 11. CVR  or IAD (Based on CVN)       - Length 8 characters or Length between 14 and 64 characters
         switch (visaIADParser.getCryptogramVersionNumber()){
-            case "10": // For CVN 10 Visa cards use 4 byte CVR
-                log.info("CVN 10 Detected!");
+            case CVN10: // For CVN 10 Visa cards use 4 byte CVR
+                log.debug("CVN 10 Detected!");
                 transactionData.append(visaIADParser.getCardVerificationResults());
                 break;
-            case "18": // For CVN 18 Visa cards use 14 to 64 byte IAD as is from the request
-            case "22": // For CVN 22 Visa cards use 14 to 64 byte IAD as is from the request
-                log.info("CVN 18/CVN 22 Detected!");
+            case CVN18: // For CVN 18 Visa cards use 14 to 64 byte IAD as is from the request
+            case CVN22: // For CVN 22 Visa cards use 14 to 64 byte IAD as is from the request
+                log.debug("CVN 18/CVN 22 Detected!");
                 transactionData.append(applicationCryptogramRequest.getIssuerApplicationData());
                 break;
         }
@@ -119,57 +109,25 @@ public class ApplicationCryptogramGenerator {
                 transactionDate.substring(8, 10); // Extract Date
     }
     /**
-     * Verify transaction data length and ensure it is a multiple of 16, else pad with "0" char
-     * to make the length a multiple of 16.
-     * @param transactionData Transaction data string.
-     * @return ISO/IEC-9797-1 formatted transaction data string.
+     * Format Application Transaction Counter (ATC) and ensure that it is 4 characters long.
+     * @param applicationTransactionCounter ATC value received from input.
+     * @return Left padded ATC with 4 character length.
      */
-    private String padTransactionDataISO_IEC_9797_1(String transactionData){
-        int transactionDataLength = transactionData.length();
-        int expectedTransactionDataLength = ((int) Math.ceil((float) transactionDataLength / 16) * 16);
-        // Check if transaction data is multiple of 16, else pad with x"0" chars till the length is a multiple of 16.
-        if (transactionDataLength  == expectedTransactionDataLength){
-            log.info(this.getClass() + " - 9797-1 Transaction Data                 : " + transactionData);
-            log.info(this.getClass() + " - 9797-1 Transaction Data Length          : " + transactionDataLength);
-            log.info(this.getClass() + " - 9797-1 Expected Transaction Data Length : " + expectedTransactionDataLength);
-            return transactionData;
-        } else {
-            log.info(this.getClass() + " - 9797-1 Transaction Data                 : " + transactionData);
-            log.info(this.getClass() + " - 9797-1 Transaction Data Length          : " + transactionDataLength);
-            log.info(this.getClass() + " - 9797-1 Expected Transaction Data Length : " + expectedTransactionDataLength);
-            return Padding.padString(transactionData, "0", expectedTransactionDataLength, false);
-        }
+    private String getAndFormatApplicationTransactionCounter(String applicationTransactionCounter){
+        return Padding.padString(applicationTransactionCounter, "0", 4, true);
     }
     /**
-     * Pad transaction data with mandatory x"80" character, verify transaction data length and
-     * ensure it is a multiple of 16, else pad with "0" char to make the length a multiple of 16.
-     * @param transactionData Transaction data string.
-     * @return ISO/IEC-9797-2 formatted transaction data string.
+     * Generate Application Cryptogram by segmenting the formatted transaction data into 8 byte blocks or 16 hexadecimal characters each.
+     * @param formattedTransactionData Transaction data padded and formatted based on CVN.
+     * @param sessionKey Session Key to be used in Application Cryptogram generation.
+     * @return Generated Application Cryptogram.
      */
-    private String padTransactionDataISO_IEC_9797_2(String transactionData){
-        transactionData = transactionData + "80";
-        int transactionDataLength = transactionData.length();
-        int expectedTransactionDataLength = ((int) Math.ceil((float) transactionDataLength / 16) * 16);
-        // Check if transaction data is multiple of 16, else pad with x"0" chars till the length is a multiple of 16.
-        if (transactionDataLength  == expectedTransactionDataLength){
-            log.info(this.getClass() + " - 9797-2 Transaction Data                 : " + transactionData);
-            log.info(this.getClass() + " - 9797-2 Transaction Data Length          : " + transactionDataLength);
-            log.info(this.getClass() + " - 9797-2 Expected Transaction Data Length : " + expectedTransactionDataLength);
-            return transactionData;
-        } else {
-            log.info(this.getClass() + " - 9797-2 Transaction Data                 : " + transactionData);
-            log.info(this.getClass() + " - 9797-2 Transaction Data Length          : " + transactionDataLength);
-            log.info(this.getClass() + " - 9797-2 Expected Transaction Data Length : " + expectedTransactionDataLength);
-            return Padding.padString(transactionData, "0", expectedTransactionDataLength, false);
-        }
-    }
-
     private String generateArqc(String formattedTransactionData, String sessionKey) {
         List<String> splitArqcData = splitTransactionData(formattedTransactionData);
         String sessionKeyA = sessionKey.substring(0, 16);
         String sessionKeyB = sessionKey.substring(16, 32);
-        log.info(this.getClass() + " - Session Key A: " + sessionKeyA);
-        log.info(this.getClass() + " - Session Key B: " + sessionKeyB);
+        log.debug(this.getClass() + " - Session Key A: " + sessionKeyA);
+        log.debug(this.getClass() + " - Session Key B: " + sessionKeyB);
         int loopCounter = 0;
         String encryptedData = null;
         for (String arqcData : splitArqcData) {
@@ -244,9 +202,7 @@ public class ApplicationCryptogramGenerator {
      */
     private String performXor(String leftOperand, String rightOperand) {
 
-        Xor xor = new Xor();
-        xor.setLeftOperand(leftOperand);
-        xor.setRightOperand(rightOperand);
+        Xor xor = new Xor(leftOperand, rightOperand);
         return xor.doXor();
 
     }

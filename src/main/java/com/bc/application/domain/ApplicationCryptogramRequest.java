@@ -1,10 +1,10 @@
-package com.bc.domain;
+package com.bc.application.domain;
 
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Core domain class defining attributes for Application Cryptogram generation request.
+ * Core domain class defining attributes for Application Cryptogram.
  */
 
 @Getter
@@ -13,7 +13,7 @@ public class ApplicationCryptogramRequest {
 
     private String pan;
     private String panSequenceNumber;
-    private String cryptogramMasterKey;
+    private String issuerMasterKey;
     private String amountAuthorised;
     private String amountOther;
     private String terminalCountryCode;
@@ -35,7 +35,7 @@ public class ApplicationCryptogramRequest {
         return "{" +
                 "pan='" + pan + '\'' +
                 ", panSequenceNumber='" + panSequenceNumber + '\'' +
-                ", cryptogramMasterKey='" + cryptogramMasterKey + '\'' +
+                ", cryptogramMasterKey='" + issuerMasterKey + '\'' +
                 ", amountAuthorised='" + amountAuthorised + '\'' +
                 ", amountOther='" + amountOther + '\'' +
                 ", terminalCountryCode='" + terminalCountryCode + '\'' +
