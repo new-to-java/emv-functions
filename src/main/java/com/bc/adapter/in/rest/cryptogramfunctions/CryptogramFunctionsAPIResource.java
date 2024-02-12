@@ -1,16 +1,15 @@
 package com.bc.adapter.in.rest.cryptogramfunctions;
 
-import com.bc.application.domain.ApplicationCryptogramRequest;
-import com.bc.application.domain.ApplicationCryptogramResponse;
+import com.bc.application.domain.CryptogramResponse;
+import com.bc.application.port.in.rest.cryptogramfunctions.command.GenerateApplicationCryptogramCommand;
+import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestToCommandMapper;
+import com.bc.application.service.impl.VisaCryptogramServiceImpl;
 import com.bc.model.dto.GenerateACRequest;
 import com.bc.model.dto.GenerateACResponse;
-import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestMapper;
-import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACResponseMapper;
+import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACDomainToResponseMapper;
 import com.bc.application.port.in.rest.cryptogramfunctions.client.CryptogramFunctionsAPI;
-import com.bc.application.service.CryptogramFunctionsService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -20,12 +19,12 @@ import jakarta.ws.rs.core.Response;
 public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
     // Service - Pending build and injection
     @Inject
-    CryptogramFunctionsService cryptogramFunctionsService;
+    VisaCryptogramServiceImpl visaCryptogramService;
     // Mappers
     @Inject
-    GenerateACRequestMapper generateACRequestMapper;
+    GenerateACRequestToCommandMapper generateACRequestToCommandMapper;
     @Inject
-    GenerateACResponseMapper generateACResponseMapper;
+    GenerateACDomainToResponseMapper generateACDomainToResponseMapper;
     /**
      * Method handling the generation of Application Cryptograms. This method performs the following functions:
      * - Validate the REST API GenerateACRequest payload and return any validation errors.
@@ -37,16 +36,20 @@ public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
      * @param generateACRequest REST API request payload containing the GenerateAC request arributes.
      * @return REST API response payload or error response.
      */
-    public Response generateApplicationCrptogram(@Valid GenerateACRequest generateACRequest){
-        // Assumption is to use Hibernate validators with patterns to cover length+data checks and
-        // no service layer validation will be done as of now.
-        ApplicationCryptogramRequest applicationCryptogramRequest =
-                generateACRequestMapper.mapToGenerateACRequest(generateACRequest);
-        ApplicationCryptogramResponse applicationCryptogramResponse =
-                cryptogramFunctionsService.generateAC(applicationCryptogramRequest);
+    public Response generateApplicationCrptogram(GenerateACRequest generateACRequest){
+        // Command object to validate the Request.
+        GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand =
+                generateACRequestToCommandMapper.mapGenerateACRequestToCommand(generateACRequest);
+        CryptogramResponse cryptogramResponse =
+                visaCryptogramService.getApplicationCryptogram(generateApplicationCryptogramCommand);
         GenerateACResponse generateACResponse =
-                generateACResponseMapper.mapFromApplicationCryptogramResponse(applicationCryptogramResponse);
-        return Response.status(Response.Status.OK).entity(generateACResponse).build();
+                generateACDomainToResponseMapper.mapFromApplicationCryptogramResponse(cryptogramResponse);
+        return Response.status(Response.Status.CREATED).entity(generateACResponse).build();
     }
+    // Implement the following methods:
+    // Driver method which will
+    //      Call another method to determine payment scheme
+    //      Based on payment scheme, will call the corresponding Cryptogram Service
+    //      Return the cryptogram generated to the API resource.
 
 }

@@ -6,16 +6,14 @@ import com.bc.application.enumeration.PaymentScheme;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import static com.bc.model.constants.CommonConstants.*;
+import static com.bc.model.pattern.CommonPattern.*;
 import static com.bc.model.constants.PaymentSchemeConstants.*;
 
 /**
  * This class implements the methods for deriving various cryptographic keys used in the EMV functions.
  * Note: All attributes except the key are mandatory input for the proper functioning of the key derivation methods.
  */
-@Setter
 @Getter
 @Slf4j
 public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDerivationKeyDerivator> {

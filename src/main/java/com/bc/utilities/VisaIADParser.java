@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import static com.bc.model.constants.CommonConstants.IS_VALID_IAD_FORMAT;
+import static com.bc.model.pattern.CommonPattern.IS_VALID_IAD_FORMAT;
 
 /**
  * Class defining methods for parsing a Visa specific IAD and splitting the IAD into the following components.
@@ -43,8 +43,8 @@ public class VisaIADParser {
     /**
      * Constructor with only Issuer Application Data (IAD).
      */
-    public VisaIADParser(){
-        this.issuerApplicationData = null;
+    public VisaIADParser(String issuerApplicationData){
+        this.issuerApplicationData = issuerApplicationData;
         this.lengthIndicator = null;
         this.derivationKeyIndex = null;
         this.cryptogramVersionNumber = null;

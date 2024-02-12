@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ApplicationCryptogramRequest {
+public class CryptogramRequest {
 
     private String pan;
     private String panSequenceNumber;

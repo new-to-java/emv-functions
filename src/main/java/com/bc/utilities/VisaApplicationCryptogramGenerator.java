@@ -1,63 +1,71 @@
 package com.bc.utilities;
 
-import com.bc.application.domain.ApplicationCryptogramRequest;
+import com.bc.application.domain.CryptogramRequest;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class defining methods for generating an Application Cryptogram (ARQC) for Visa and Mastercard Payment Schemes.
+ * Class defining methods for generating a Visa Payment Scheme Application Cryptogram (ARQC) and Response Cryptogram (ARPC).
+ * Note: ARPC derivation implementation is pending.
  */
 @Slf4j
-public class ApplicationCryptogramGenerator {
+public class VisaApplicationCryptogramGenerator {
 
     /**
      * Driver method for generating Application Cryptogram based on Cryptogram Version Number (CVN) for Visa
      * and will call CVN specific methods to generate the Application Cryptogram.
      * @return Application Cryptogram (ARQC).
      */
-    public String getVisaApplicationCryptogram(ApplicationCryptogramRequest applicationCryptogramRequest, String sessionKey){
-        VisaIADParser visaIADParser = new VisaIADParser();
-        visaIADParser.setIssuerApplicationData(applicationCryptogramRequest.getIssuerApplicationData());
-        visaIADParser.parseIad();
-        String transactionData = buildVisaTransactionData(applicationCryptogramRequest, visaIADParser);
+    public String getVisaApplicationCryptogram(CryptogramRequest cryptogramRequest, String sessionKey){
+        VisaIADParser visaIADParser = new VisaIADParser(cryptogramRequest.getIssuerApplicationData()).parseIad();
+        String transactionData = buildVisaTransactionData(cryptogramRequest, visaIADParser);
         if (visaIADParser.getCryptogramVersionNumber().isCVN10()){
             transactionData = ISOIEC97971Padding.performIsoIec97971Method1Padding(transactionData);
         } else {
             transactionData = ISOIEC97971Padding.performIsoIec97971Method2Padding(transactionData);
         }
         return generateArqc(transactionData, sessionKey);
-
+    }
+    /**
+     * Method to call the Visa IAD Parser and return a VisaIADParser object with the parsed IAD.
+     * @param issuerApplicationData Visa Issuer Application Data to be parsed.
+     * @return Parsed Visa IAD.
+     */
+    private VisaIADParser getParsedVisaIad(String issuerApplicationData){
+        VisaIADParser visaIADParser = new VisaIADParser(issuerApplicationData);
+        visaIADParser.setIssuerApplicationData(issuerApplicationData);
+        return visaIADParser.parseIad();
     }
     /**
      * Generate Visa transaction data for Application Cryptogram generation.
-     * @param applicationCryptogramRequest Application cryptogram generation request received.
+     * @param cryptogramRequest Application cryptogram generation request received.
      * @param visaIADParser Parsed Visa IAD data.
      * @return Non ISO/IEC 9797 formatted Visa transaction data generation for generating Application Cryptogram.
      */
-    private String buildVisaTransactionData(ApplicationCryptogramRequest applicationCryptogramRequest, VisaIADParser visaIADParser){
+    private String buildVisaTransactionData(CryptogramRequest cryptogramRequest, VisaIADParser visaIADParser){
         StringBuilder transactionData = new StringBuilder();
         // Pad and build transaction data
         //  1. Amount authorised                - Length: 12 characters
-        transactionData.append(getAndFormatAmount(applicationCryptogramRequest.getAmountAuthorised()));
+        transactionData.append(getAndFormatAmount(cryptogramRequest.getAmountAuthorised()));
         //  2. Amount Other                     - Length: 12 characters
-        transactionData.append(getAndFormatAmount(applicationCryptogramRequest.getAmountOther()));
+        transactionData.append(getAndFormatAmount(cryptogramRequest.getAmountOther()));
         //  3. Terminal Country Code            - Length: 4 characters
-        transactionData.append(getAndFormatCountryCode(applicationCryptogramRequest.getTerminalCountryCode()));
+        transactionData.append(getAndFormatCountryCode(cryptogramRequest.getTerminalCountryCode()));
         //  4. Terminal Verification Results    - Length: 10 characters
-        transactionData.append(applicationCryptogramRequest.getTerminalVerificationResults());
+        transactionData.append(cryptogramRequest.getTerminalVerificationResults());
         //  5. Transaction Currency Code        - Length: 4 characters
-        transactionData.append(getAndFormatCurrencyCode(applicationCryptogramRequest.getTransactionCurrencyCode()));
+        transactionData.append(getAndFormatCurrencyCode(cryptogramRequest.getTransactionCurrencyCode()));
         //  6. Transaction Date (YYMMDD format) - Length: 6 characters
-        transactionData.append(getAndFormatTransactionDateToYYMMDD(applicationCryptogramRequest.getTransactionDate()));
+        transactionData.append(getAndFormatTransactionDateToYYMMDD(cryptogramRequest.getTransactionDate()));
         //  7. Transaction Type                 - Length: 2 characters
-        transactionData.append(applicationCryptogramRequest.getTransactionType());
+        transactionData.append(cryptogramRequest.getTransactionType());
         //  8. Unpredictable Number             - Length: 8 characters
-        transactionData.append(applicationCryptogramRequest.getUnpredictableNumber());
+        transactionData.append(cryptogramRequest.getUnpredictableNumber());
         //  9. Application Interchange Profile  - Length: 4 characters
-        transactionData.append(applicationCryptogramRequest.getApplicationInterchangeProfile());
+        transactionData.append(cryptogramRequest.getApplicationInterchangeProfile());
         // 10. Application Transaction Counter  - Length: 4 characters
-        transactionData.append(getAndFormatApplicationTransactionCounter(applicationCryptogramRequest.getApplicationTransactionCounter()));
+        transactionData.append(getAndFormatApplicationTransactionCounter(cryptogramRequest.getApplicationTransactionCounter()));
         // 11. CVR  or IAD (Based on CVN)       - Length 8 characters or Length between 14 and 64 characters
         switch (visaIADParser.getCryptogramVersionNumber()){
             case CVN10: // For CVN 10 Visa cards use 4 byte CVR
@@ -67,7 +75,7 @@ public class ApplicationCryptogramGenerator {
             case CVN18: // For CVN 18 Visa cards use 14 to 64 byte IAD as is from the request
             case CVN22: // For CVN 22 Visa cards use 14 to 64 byte IAD as is from the request
                 log.debug("CVN 18/CVN 22 Detected!");
-                transactionData.append(applicationCryptogramRequest.getIssuerApplicationData());
+                transactionData.append(cryptogramRequest.getIssuerApplicationData());
                 break;
         }
         return transactionData.toString();

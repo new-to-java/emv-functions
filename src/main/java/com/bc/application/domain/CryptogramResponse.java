@@ -8,9 +8,9 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ApplicationCryptogramResponse {
+public class CryptogramResponse {
 
-    private String applicationCryptogram;
-    private String applicationCryptogramType;
+    private String requestCryptogram;
+    private String responseCryptogram;
 
 }

@@ -9,12 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import static com.bc.model.pattern.CommonPattern.*;
 
 /**
- * This class implements the methods for deriving EMV Session Key derivation methods.
+ * This class implements the methods for deriving Mastercard Proprietary Session Key derivation method.
  */
 @Setter
 @Getter
 @Slf4j
-public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator> {
+public class MastercardSessionKeyDerivator extends SelfValidator<MastercardSessionKeyDerivator> {
     //Input attributes
     @NotNull
     @Pattern(regexp = IS_A_VALID_TDEA_KEY)
@@ -24,15 +24,19 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
     private String applicationTransactionCounter;
     @NotNull
     private CryptogramVersionNumber cryptogramVersionNumber;
+    @NotNull
+    @Pattern(regexp = IS_A_8_DIGIT_HEXADECIMAL_NUMBER)
+    private String unpredictableNumber;
     /**
      * All args constructor
      */
-    public EMVSessionKeyDerivator(String inputKey, String applicationTransactionCounter,
-                                  CryptogramVersionNumber cryptogramVersionNumber){
+    public MastercardSessionKeyDerivator(String inputKey, String applicationTransactionCounter,
+                                         CryptogramVersionNumber cryptogramVersionNumber, String unpredictableNumber){
         debugLog();
         this.inputKey = inputKey;
         this.applicationTransactionCounter = applicationTransactionCounter;
         this.cryptogramVersionNumber = cryptogramVersionNumber;
+        this.unpredictableNumber = unpredictableNumber;
         this.selfValidate();
     }
     /**
@@ -51,9 +55,7 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
             case CVN10:
                 return udkAsSessionKey();
             case CVN14:
-            case CVN18:
-            case CVN22:
-                return getEMVCommonSessionKeyDerivationMethodBasedKey();
+                return getMastercardProprietarySKDMethodBasedKey();
         }
         return null;
 
@@ -72,7 +74,7 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
      * details provided in EMV Book 2 and VIS 1.6 - D.7.2.
      * @return Session Key generated using EMV CSK method.
      */
-    private String getEMVCommonSessionKeyDerivationMethodBasedKey(){
+    private String getMastercardProprietarySKDMethodBasedKey(){
 
         String emvCskKeyAComponent, emvCskKeyBComponent;
         String emvCskKeyA, emvCskKeyB;
