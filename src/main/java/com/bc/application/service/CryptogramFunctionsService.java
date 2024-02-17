@@ -60,9 +60,4 @@ public abstract class CryptogramFunctionsService<Command, CommandToDomainMapper>
     protected abstract String generateCryptogram(CryptogramRequest cryptogramRequest, String sessionKey,
                                                  CryptogramVersionNumber cryptogramVersionNumber,
                                                  String cardVerificationResults);
-    /**
-     * Method for logging the input data and output data for the CryptogramFunctions service request, when the debug log level is enabled.
-     */
-    protected abstract void debugLog(Object object);
-
 }
