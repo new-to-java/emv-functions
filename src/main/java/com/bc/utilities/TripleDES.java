@@ -177,9 +177,8 @@ public class TripleDES
         if (key.length() == KEY_LENGTH_TDEA_SINGLE) {
             workTdeaInputKey = key + key + key;
             logDebug(log,
-                    "Single length TDEA Key received {}.",
+                    "Single length TDEA Key received {}, Key expanded to triple length TDEA Key: {}.",
                     key,
-                    " Key expanded to triple length TDEA Key: {}.",
                     workTdeaInputKey
             );
         } else if (key.length() == KEY_LENGTH_TDEA_DOUBLE) {
@@ -187,9 +186,8 @@ public class TripleDES
                     KEY_LENGTH_TDEA_SINGLE
             );
             logDebug(log,
-                    "Double length TDEA Key received {}.",
+                    "Double length TDEA Key received {}, Key expanded to triple length TDEA Key: {}.",
                     key,
-                    " Key expanded to triple length TDEA Key: {}.",
                     workTdeaInputKey
             );
         } else {

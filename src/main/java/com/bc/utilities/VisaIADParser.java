@@ -50,10 +50,16 @@ public class VisaIADParser
         this.issuerApplicationData = issuerApplicationData;
         // Call self validate
         selfValidate();
-        logInfo(log, "Self validated.");
+        logInfo(log,
+                "Self validated successful for object {}.",
+                this
+        );
         // Initialise IAD data item names and lengths based on format
         initialiseIadDataItemLengths();
-        logDebug(log, "Initialized item lengths {}.", visaIadDataNamesAndLengths);
+        logDebug(log,
+                "Initialized item lengths {}.",
+                visaIadDataNamesAndLengths
+        );
     }
     /**
      * Driver method for parsing a Visa Issuer Application Data element - EMV Tag 9F10

@@ -11,6 +11,8 @@ import com.bc.application.service.CryptogramFunctionsService;
 import com.bc.utilities.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
 /**
  * Core domain service hosting the methods for performing Visa Payment scheme specific cryptogram related functions.
@@ -21,6 +23,12 @@ public class VisaCryptogramServiceImpl
         extends CryptogramFunctionsService<GenerateApplicationCryptogramCommand,
         GenerateACCommandToDomainMapper>
         implements LoggerUtility {
+    private Map<String, String> mappedIad = new LinkedHashMap<>();
+    private String uniqueDerivationKey;
+    private String applicationCryptogramKey;
+    private CryptogramVersionNumber cryptogramVersionNumber;
+    private String cardVerificationResults;
+    private PaymentScheme paymentScheme;
     /**
      * Driver method for generating an Application Cryptogram.
      * @param command Command object with the Application Cryptogram generation request.
@@ -28,34 +36,15 @@ public class VisaCryptogramServiceImpl
      */
     @Override
     public CryptogramResponse getApplicationCryptogram(GenerateApplicationCryptogramCommand command) {
-        final String CVN_NAME = "CVN";
-        final String CVR_NAME = "CVR";
-        // Log command object
         logDebug(log, "Command object received: {}.", command);
-        // Map command to domain
         CryptogramRequest cryptogramRequest = buildDomainObjectFromCommand(command);
-        // Parsed Visa IAD
-        Map<String, String> visaIad =  getParsedVisaIad(cryptogramRequest.getIssuerApplicationData());
-        // Set Cryptogram Version Number
-        log.debug("CVN from Parsed IAD: {}.", visaIad.get(CVN_NAME));
-        CryptogramVersionNumber cryptogramVersionNumber = CryptogramVersionNumber.valueOf(
-                visaIad.get(CVN_NAME)
-        );
-        String cardVerificationResults = visaIad.get(CVR_NAME);
-        // Generate Unique Derivation Key
-        String uniqueDerivationKey = getUniqueDerivationKey(cryptogramRequest.getIssuerMasterKey(),
-                cryptogramRequest.getPan(),
-                cryptogramRequest.getPanSequenceNumber(),
-                cryptogramVersionNumber
-        );
-        // Generate Session Key
-        String sessionKey = getSessionKey(uniqueDerivationKey,
-                cryptogramRequest.getApplicationTransactionCounter(),
-                cryptogramVersionNumber
-        );
+        logDebug(log, "Domain objectCommand mapped from command: {}.", cryptogramRequest);
+        setPaymentScheme(cryptogramRequest.getPan());
+        parsedIadAndSetCvnCvr(cryptogramRequest.getIssuerApplicationData());
+        setApplicationCryptogramKey(cryptogramRequest);
         // Generate Visa cryptogram, and build and return REST API response object
         return buildResponseObjectFromDomain(generateCryptogram(cryptogramRequest,
-                sessionKey,
+                applicationCryptogramKey,
                 cryptogramVersionNumber,
                 cardVerificationResults)
         );
@@ -69,16 +58,85 @@ public class VisaCryptogramServiceImpl
     protected CryptogramRequest buildDomainObjectFromCommand(GenerateApplicationCryptogramCommand command) {
         return commandToDomainMapper.mapGenerateACCommandToDomain(command);
     }
-
     /**
-     * Call Visa IAD parser with IAD from request as input.
-     * @param issuerApplicationData IAD from request.
-     * @return Parsed Visa IAD map.
+     * Set Payment Scheme based on the first digit of PAN.
      */
-    private Map<String, String> getParsedVisaIad(String issuerApplicationData){
-        return new VisaIADParser(
-                issuerApplicationData)
-                .parseIad();
+    @Override
+    protected void setPaymentScheme(String pan){
+        paymentScheme = DeterminePaymentScheme.fromPan(pan);
+        logDebug(log, "Payment Scheme set based on PAN: {}.", paymentScheme);
+    }
+    /**
+     * Call Payment Scheme specific IAD parser with IAD from request as input and get a parsed IAD map, and setup CVN and CVR
+     * from the parsed IAD.
+     * @param issuerApplicationData IAD from request.
+     */
+    @Override
+    protected void parsedIadAndSetCvnCvr(String issuerApplicationData){
+        mappedIad = new VisaIADParser(issuerApplicationData).parseIad();
+        logDebug(log, "Mapped IAD: {}.", mappedIad);
+        setCvnFromMappedIad();
+        setCvrFromMappedIad();
+    }
+    /**
+     * Search mapped IAD data using key "CVN" and set the Cryptogram Version Number based on the value.
+     */
+    @Override
+    protected void setCvnFromMappedIad(){
+        final String CVN_NAME = "CVN";
+        cryptogramVersionNumber = CryptogramVersionNumber.valueOf(
+                mappedIad.get(CVN_NAME)
+        );
+        logDebug(log, "CVN set based on mapped IAD: {}.", cryptogramVersionNumber);
+    }
+    /**
+     * Search mapped IAD data using key "CVR" and set the Card Verification Results based on the value.
+     */
+    @Override
+    protected void setCvrFromMappedIad(){
+        final String CVR_NAME = "CVR";
+        cardVerificationResults = mappedIad.get(
+                CVR_NAME
+        );
+        logDebug(log, "CVR set based on mapped IAD: {}.", cardVerificationResults);
+    }
+    /**
+     * Driver method which derives Unique Derivation Key from Issuer Master Key, and subsequently derives a Session Key
+     * from the derives Unique Derivation Key.
+     * @param cryptogramRequest CryptogramRequest domain object mapped from command.
+     */
+    @Override
+    protected void setApplicationCryptogramKey(CryptogramRequest cryptogramRequest){
+        buildUniqueDerivationKeyFromIssuerMasterKey(cryptogramRequest);
+        buildSessionKeyFromUniqueDerivationKey(cryptogramRequest.getApplicationTransactionCounter(),
+                cryptogramRequest.getUnpredictableNumber()
+        );
+    }
+    /**
+     * Build Unique Derivation Key from the Issuer Master Key received from input.
+     * @param cryptogramRequest CryptogramRequest domain object mapped from command.
+     */
+    @Override
+    protected void buildUniqueDerivationKeyFromIssuerMasterKey(CryptogramRequest cryptogramRequest){
+        uniqueDerivationKey = getUniqueDerivationKey(cryptogramRequest.getIssuerMasterKey(),
+                cryptogramRequest.getPan(),
+                cryptogramRequest.getPanSequenceNumber(),
+                cryptogramVersionNumber
+        );
+        logDebug(log, "UDK generated: {}.", uniqueDerivationKey);
+    }
+    /**
+     * Build Session Key from the derived Unique Derivation Key.
+     * @param applicationTransactionCounter ApplicationTransactionCounter from input.
+     */
+    @Override
+    protected void buildSessionKeyFromUniqueDerivationKey(String applicationTransactionCounter, String unpredictableNumber){
+        applicationCryptogramKey = getSessionKey(uniqueDerivationKey,
+                applicationTransactionCounter,
+                unpredictableNumber,
+                cryptogramVersionNumber
+        );
+        logDebug(log, "Session Key generated: {}.", applicationCryptogramKey);
     }
     /**
      * Method to derive Unique Derivation Key (UDK) from Issuer Master Key (IMK) for cryptogram generation.
@@ -96,7 +154,7 @@ public class VisaCryptogramServiceImpl
         EMVUniqueDerivationKeyDerivator emvUdkDerivator = new EMVUniqueDerivationKeyDerivator(issuerMasterKey,
                 pan,
                 panSequenceNumber,
-                PaymentScheme.VISA,
+                paymentScheme,
                 cryptogramVersionNumber,
                 EMVUDKDerivationMethod.METHOD_A
         );
@@ -105,18 +163,22 @@ public class VisaCryptogramServiceImpl
     }
     /**
      * Method to derive Unique Derivation Key (UDK) from Issuer Master Key (IMK) for cryptogram generation.
-     * @param uniqueDerivationKey UDK deriver from IMK.
+     * @param uniqueDerivationKey UDK derived from IMK.
      * @param applicationTransactionCounter Application Transaction Counter from request.
+     * @param unpredictableNumber Unpredictable Number from input.
      * @param cryptogramVersionNumber Cryptogram version number determined from Issuer Application Data.
      * @return Session Key generated from UDK.
      */
     @Override
     protected String getSessionKey(String uniqueDerivationKey,
                                    String applicationTransactionCounter,
+                                   String unpredictableNumber,
                                    CryptogramVersionNumber cryptogramVersionNumber) {
         EMVSessionKeyDerivator emvSessionKeyDerivator = new EMVSessionKeyDerivator(uniqueDerivationKey,
                 applicationTransactionCounter,
-                cryptogramVersionNumber
+                unpredictableNumber,
+                cryptogramVersionNumber,
+                paymentScheme
         );
         return emvSessionKeyDerivator.generateSessionKey();
     }
@@ -129,6 +191,7 @@ public class VisaCryptogramServiceImpl
     protected CryptogramResponse buildResponseObjectFromDomain(String arqc) {
         CryptogramResponse cryptogramResponse = new CryptogramResponse();
         cryptogramResponse.setRequestCryptogram(arqc);
+        logDebug(log, "Response object generated: {}.", cryptogramResponse);
         return cryptogramResponse;
     }
     /**
@@ -142,10 +205,11 @@ public class VisaCryptogramServiceImpl
                                         CryptogramVersionNumber cryptogramVersionNumber,
                                         String cardVerificationResults) {
         VisaApplicationCryptogramGenerator visaApplicationCryptogramGenerator = new VisaApplicationCryptogramGenerator();
-        return visaApplicationCryptogramGenerator.generateVisaApplicationCryptogram(cryptogramRequest,
-                sessionKey,
-                cryptogramVersionNumber,
-                cardVerificationResults
-        );
+        return visaApplicationCryptogramGenerator
+                .generateVisaApplicationCryptogram(cryptogramRequest,
+                        sessionKey,
+                        cryptogramVersionNumber,
+                        cardVerificationResults
+                );
     }
 }

@@ -23,6 +23,7 @@ public class ISOIEC97971Padding {
         // Constants
         final int BLOCK_SIZE = 16; // Uses 16 here, since the input data is in hexadecimal format.
         final String PADDING_CHAR = "0"; // Padding character 0.
+        log.debug("ISO 97971 Padding Method 1, input data: {}.", inputData);
         // Variables
         int inputDataLength = inputData.length();
         int requiredInputDataLength = ((int)
@@ -31,7 +32,6 @@ public class ISOIEC97971Padding {
                         BLOCK_SIZE)
                 * BLOCK_SIZE
         );
-        log.debug("ISO 97971 Padding Method 1, input data: {}.", inputData);
         // Check if transaction data is multiple of 16, else pad with x"0" chars till the length is a multiple of 16.
         if (inputDataLength  == requiredInputDataLength){
             return inputData;
@@ -61,6 +61,7 @@ public class ISOIEC97971Padding {
         final int BLOCK_SIZE = 16; // Uses 16 here, since the input data is in hexadecimal format.
         final String MANDATORY_PADDING_CHAR = "80"; // Mandatory bit 1 padding character, i.e., 1000 0000.
         final String OPTIONAL_PADDING_CHAR = "0"; // Optional bit 0 padding character, i.e., 0000 0000.
+        log.debug("ISO 97971 Padding Method 2, input data: {}.", inputData);
         // Variables
         inputData = inputData + MANDATORY_PADDING_CHAR;
         int inputDataLength = inputData.length();
@@ -70,7 +71,6 @@ public class ISOIEC97971Padding {
                         BLOCK_SIZE)
                 * BLOCK_SIZE
         );
-        log.debug("ISO 97971 Padding Method 2, input data: {}.", inputData);
         // Check if transaction data is multiple of 16, else pad with x"0" chars till the length is a multiple of 16.
         if (inputDataLength  == requiredInputDataLength){
             return inputData;

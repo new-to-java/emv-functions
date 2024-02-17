@@ -5,66 +5,59 @@ import com.bc.application.enumeration.CryptogramVersionNumber;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
+
 /**
- * Class defining methods for generating a Visa Payment Scheme Application Cryptogram (ARQC) and Response Cryptogram (ARPC).
+ * Class defining methods for generating a Mastercard Payment Scheme Application Cryptogram (ARQC) and Response Cryptogram (ARPC).
  * Note: ARPC derivation implementation is pending.
  */
 @Slf4j
-public class VisaApplicationCryptogramGenerator
+public class MastercardApplicationCryptogramGenerator
         implements LoggerUtility {
     /**
-     * Driver method for generating Application Cryptogram based on Cryptogram Version Number (CVN) for Visa
+     * Driver method for generating Application Cryptogram based on Cryptogram Version Number (CVN) for Mastercard
      * and will call CVN specific methods to generate the Application Cryptogram.
      * @return Application Cryptogram (ARQC).
      */
-    public String generateVisaApplicationCryptogram(CryptogramRequest cryptogramRequest,
+    public String generateMastercardApplicationCryptogram(CryptogramRequest cryptogramRequest,
                                                String sessionKey,
                                                CryptogramVersionNumber cryptogramVersionNumber,
                                                String cardVerificationResults){
-        // Build Visa Transaction Data
-        String transactionData = buildVisaTransactionData(cryptogramRequest,
+        // Build Mastercard Transaction Data
+        String transactionData = buildMastercardTransactionData(cryptogramRequest,
                 cryptogramVersionNumber,
                 cardVerificationResults
         );
-        logDebug(log, "Visa transaction data generated: {}", transactionData);
+        logDebug(log, "Mastercard transaction data generated: {}", transactionData);
         // PAD transaction data based on CVN
         transactionData = checkCvnAndPadTransactionData(cryptogramVersionNumber,
                 transactionData
         );
-        logDebug(log, "Visa transaction data with ISO 97971 padding: {}", transactionData);
+        logDebug(log, "Mastercard transaction data with ISO 97971 padding: {}", transactionData);
         return generateArqc(transactionData, sessionKey);
     }
 
     /**
-     * Check Cryptogram Version Number and pad the visa transaction data with ISO 97971 Method1 or Method2 padding.
+     * Check Cryptogram Version Number and pad the Mastercard transaction data with ISO 97971 Method1 or Method2 padding.
      * @param cryptogramVersionNumber Cryptogram Version Number.
      * @param transactionData Transaction data to be padded.
      * @return Padded transaction data.
      */
     private String checkCvnAndPadTransactionData(CryptogramVersionNumber cryptogramVersionNumber,
                                                  String transactionData) {
-        logDebug(log, "Visa CVN \"{}\" card detected!", cryptogramVersionNumber);
-        // Use ISO 97971-Padding Method 1 for CVN 10
-        if (cryptogramVersionNumber.isCVN10()){
-            transactionData = ISOIEC97971Padding.performIsoIec97971Method1Padding(
-                    transactionData
+        logDebug(log, "Mastercard CVN \"{}\" card detected!", cryptogramVersionNumber);
+        // Mastercard uses ISO 97971-Padding Method 2 for all CVNs
+        return ISOIEC97971Padding.performIsoIec97971Method2Padding(
+                transactionData
             );
-        // Use ISO 97971-Padding Method 2 for all other CVNs
-        } else {
-            transactionData = ISOIEC97971Padding.performIsoIec97971Method2Padding(
-                    transactionData
-            );
-        }
-        return transactionData;
     }
     /**
-     * Generate Visa transaction data for Application Cryptogram generation.
+     * Generate Mastercard transaction data for Application Cryptogram generation.
      * @param cryptogramRequest Application cryptogram generation request received.
      * @param cryptogramVersionNumber Cryptogram Version Number.
      * @param cardVerificationResults Card Verification Results.
-     * @return Formatted Visa transaction data generation for generating Application Cryptogram.
+     * @return Formatted Mastercard transaction data generation for generating Application Cryptogram.
      */
-    private String buildVisaTransactionData(CryptogramRequest cryptogramRequest,
+    private String buildMastercardTransactionData(CryptogramRequest cryptogramRequest,
                                             CryptogramVersionNumber cryptogramVersionNumber,
                                             String cardVerificationResults){
         StringBuilder transactionData = new StringBuilder();
@@ -91,12 +84,9 @@ public class VisaApplicationCryptogramGenerator
         transactionData.append(getAndFormatApplicationTransactionCounter(cryptogramRequest.getApplicationTransactionCounter()));
         // 11. CVR  or IAD (Based on CVN)       - Length 8 characters or Length between 14 and 64 characters
         switch (cryptogramVersionNumber){
-            case CVN10: // For CVN 10 Visa cards use 4 byte CVR
+            case CVN10: // For CVN 10 Mastercard cards use 8 byte CVR
+            case CVN14: // For CVN 14 Mastercard cards use 6 byte CVR
                 transactionData.append(cardVerificationResults);
-                break;
-            case CVN18: // For CVN 18 Visa cards use 14 to 64 byte IAD as is from the request
-            case CVN22: // For CVN 22 Visa cards use 14 to 64 byte IAD as is from the request
-                transactionData.append(cryptogramRequest.getIssuerApplicationData());
                 break;
         }
         return transactionData.toString();
@@ -228,7 +218,10 @@ public class VisaApplicationCryptogramGenerator
             );
             parsedData = parsedData + 16;
         } while(parsedData < stringLength);
-        logDebug(log, "Split transaction data: {}.", splitTransactionData);
+        logDebug(log,
+                "Split transaction data: {}.",
+                splitTransactionData
+        );
         return splitTransactionData;
     }
     /**
@@ -265,7 +258,9 @@ public class VisaApplicationCryptogramGenerator
      */
     private String performXor(String leftOperand,
                               String rightOperand) {
-        Xor xor = new Xor(leftOperand, rightOperand);
+        Xor xor = new Xor(leftOperand,
+                rightOperand
+        );
         return xor.doXor();
     }
 }

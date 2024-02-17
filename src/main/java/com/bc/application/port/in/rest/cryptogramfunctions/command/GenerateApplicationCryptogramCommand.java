@@ -86,9 +86,11 @@ public class GenerateApplicationCryptogramCommand
         this.applicationInterchangeProfile = applicationInterchangeProfile;
         this.applicationTransactionCounter = applicationTransactionCounter;
         this.issuerApplicationData = issuerApplicationData;
-        logInfo(log, "Self validation completed!");
+        logInfo(log,
+                "Self validated object {}.",
+                this
+        );
     }
-
     /**
      * Override method to return a string representation of the class.
      * @return Attributes converted to string.

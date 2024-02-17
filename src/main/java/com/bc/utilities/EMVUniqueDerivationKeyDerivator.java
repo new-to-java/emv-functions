@@ -51,7 +51,8 @@ public class EMVUniqueDerivationKeyDerivator
         this.emvudkDerivationMethod = emvudkDerivationMethod;
         selfValidate();
         logInfo(log,
-                "Self validated."
+                "Self validated successful for object {}.",
+                this
         );
     }
     /**

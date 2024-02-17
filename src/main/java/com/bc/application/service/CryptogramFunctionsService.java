@@ -27,6 +27,41 @@ public abstract class CryptogramFunctionsService<Command, CommandToDomainMapper>
      */
     protected abstract CryptogramRequest buildDomainObjectFromCommand(Command command);
     /**
+     * Set Payment Scheme based on the first digit of PAN.
+     */
+    protected abstract void setPaymentScheme(String pan);
+    /**
+     * Call Payment Scheme specific IAD parser with IAD from request as input and get a parsed IAD map, and setup CVN and CVR
+     * from the parsed IAD.
+     * @param issuerApplicationData IAD from request.
+     */
+    protected abstract void parsedIadAndSetCvnCvr(String issuerApplicationData);
+    /**
+     * Search mapped IAD data using key "CVN" and set the Cryptogram Version Number based on the value.
+     */
+    protected abstract void setCvnFromMappedIad();
+    /**
+     * Search mapped IAD data using key "CVR" and set the Card Verification Results based on the value.
+     */
+    protected abstract void setCvrFromMappedIad();
+    /**
+     * Driver method which derives Unique Derivation Key from Issuer Master Key, and subsequently derives a Session Key
+     * from the derives Unique Derivation Key.
+     * @param cryptogramRequest CryptogramRequest domain object mapped from command.
+     */
+    protected abstract void setApplicationCryptogramKey(CryptogramRequest cryptogramRequest);
+    /**
+     * Build Unique Derivation Key from the Issuer Master Key received from input.
+     * @param cryptogramRequest CryptogramRequest domain object mapped from command.
+     */
+    protected abstract void buildUniqueDerivationKeyFromIssuerMasterKey(CryptogramRequest cryptogramRequest);
+    /**
+     * Build Session Key from the derived Unique Derivation Key.
+     * @param applicationTransactionCounter Application Transaction Counter from input.
+     * @param unpredictableNumber Unpredictable Number from input.
+     */
+    protected abstract void buildSessionKeyFromUniqueDerivationKey(String applicationTransactionCounter, String unpredictableNumber);
+    /**
      * Method to derive Unique Derivation Key (UDK) from Issuer Master Key (IMK) for cryptogram generation.
      * @param issuerMasterKey Issuer Master Key from request.
      * @param pan Primary Account Number from request.
@@ -40,10 +75,12 @@ public abstract class CryptogramFunctionsService<Command, CommandToDomainMapper>
      * Method to derive Unique Derivation Key (UDK) from Issuer Master Key (IMK) for cryptogram generation.
      * @param uniqueDerivationKey UDK deriver from IMK.
      * @param applicationTransactionCounter Application Transaction Counter from request.
+     * @param unpredictableNumber Unpredictable Number from request.
      * @param cryptogramVersionNumber Cryptogram version number determined from Issuer Application Data.
      * @return Session Key generated from UDK.
      */
     protected abstract String getSessionKey(String uniqueDerivationKey, String applicationTransactionCounter,
+                                            String unpredictableNumber,
                                             CryptogramVersionNumber cryptogramVersionNumber);
     /**
      * Method to build and map the Cryptogram Response domain object to Response DTO class.

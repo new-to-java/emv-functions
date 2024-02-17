@@ -29,6 +29,10 @@ public class Xor
         this.rightOperand = rightOperand;
         this.result = new StringBuilder();
         this.selfValidate();
+        logInfo(log,
+                "Self validated successful for object {}.",
+                this
+        );
     }
     /**
      * Method that perform XOR function on two hexadecimal strings passed.
@@ -42,7 +46,7 @@ public class Xor
                 result.append(Hex.encodeHexString(new byte[]{(byte) (leftOperandBytes[i] ^ rightOperandBytes[i])}));
             }
         } catch (DecoderException decoderException) {
-            throwExceptionAndTerminate("Data decoding to byte array failed",
+            throwExceptionAndTerminate(
                     decoderException
             );
         } finally {
@@ -67,14 +71,13 @@ public class Xor
     }
     /**
      * Method to raise an exception and terminate processing.
+     *
      * @param exception Generic exception object.
-     * @param message Message to be included in the exception.
      */
-    private void throwExceptionAndTerminate(String message,
-                                            Exception exception) {
+    private void throwExceptionAndTerminate(Exception exception) {
         throw new RuntimeException(this.getClass() +
                 " --> " +
-                message +
+                "Data decoding to byte array failed" +
                 " Cause: " +
                 exception.getCause() +
                 " Message: " +
