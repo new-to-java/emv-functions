@@ -2,9 +2,6 @@ package com.bc.utilities;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -14,7 +11,9 @@ import org.apache.commons.codec.binary.Hex;
  * that are supplied in string format.
  */
 @Slf4j
-public class Xor extends SelfValidator<Xor> {
+public class Xor
+        extends SelfValidator<Xor>
+        implements LoggerUtility {
     @NotEmpty
     @Pattern(regexp = "^[\\da-fA-F]+$")
     private String leftOperand;
@@ -22,7 +21,6 @@ public class Xor extends SelfValidator<Xor> {
     @Pattern(regexp = "^[\\da-fA-F]+$")
     private String rightOperand;
     private StringBuilder result;
-
     /**
      * All args constructor
      */
@@ -44,10 +42,14 @@ public class Xor extends SelfValidator<Xor> {
                 result.append(Hex.encodeHexString(new byte[]{(byte) (leftOperandBytes[i] ^ rightOperandBytes[i])}));
             }
         } catch (DecoderException decoderException) {
-            throw new RuntimeException(this.getClass() +  " - Data decoding to byte array failed - "
-                    + decoderException.getCause() + " - " + decoderException.getMessage());
+            throwExceptionAndTerminate("Data decoding to byte array failed",
+                    decoderException
+            );
         } finally {
-            debugLog();
+            logDebug(log,
+                    "Xor request object: {}.",
+                    this
+            );
         }
         return result.toString();
     }
@@ -64,12 +66,19 @@ public class Xor extends SelfValidator<Xor> {
                 '}';
     }
     /**
-     * Method for logging the input data and output data for the Xor function, when the debug log level is enabled.
+     * Method to raise an exception and terminate processing.
+     * @param exception Generic exception object.
+     * @param message Message to be included in the exception.
      */
-    private void debugLog(){
-        if (log.isDebugEnabled()) {
-            log.debug(" Debug log : {}", this);
-        }
+    private void throwExceptionAndTerminate(String message,
+                                            Exception exception) {
+        throw new RuntimeException(this.getClass() +
+                " --> " +
+                message +
+                " Cause: " +
+                exception.getCause() +
+                " Message: " +
+                exception.getMessage()
+        );
     }
-
 }
