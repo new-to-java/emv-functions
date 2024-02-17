@@ -7,14 +7,15 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import static com.bc.model.pattern.CommonPattern.*;
-
 /**
  * This class implements the methods for deriving EMV Session Key derivation methods.
  */
 @Setter
 @Getter
 @Slf4j
-public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator> {
+public class EMVSessionKeyDerivator
+        extends SelfValidator<EMVSessionKeyDerivator>
+        implements LoggerUtility {
     //Input attributes
     @NotNull
     @Pattern(regexp = IS_A_VALID_TDEA_KEY)
@@ -27,13 +28,15 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
     /**
      * All args constructor
      */
-    public EMVSessionKeyDerivator(String inputKey, String applicationTransactionCounter,
+    public EMVSessionKeyDerivator(String inputKey,
+                                  String applicationTransactionCounter,
                                   CryptogramVersionNumber cryptogramVersionNumber){
-        debugLog();
         this.inputKey = inputKey;
         this.applicationTransactionCounter = applicationTransactionCounter;
         this.cryptogramVersionNumber = cryptogramVersionNumber;
-        this.selfValidate();
+        selfValidate();
+        logInfo(log, "Self validated.");
+
     }
     /**
      * Driver method for generating the requested Session Key from the Master key.
@@ -46,17 +49,21 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
      * @return Generated Session Key
      */
     private String getSessionKey() {
-
+        String sessionKey;
         switch (cryptogramVersionNumber){
-            case CVN10:
-                return udkAsSessionKey();
             case CVN14:
             case CVN18:
             case CVN22:
-                return getEMVCommonSessionKeyDerivationMethodBasedKey();
+                logInfo(log, "CVN14/CVN18/CVN22 session key derivation.");
+                sessionKey = getEMVCommonSessionKeyDerivationMethodBasedKey();
+                logDebug(log, "Session Key derived from UDK: {}.", sessionKey);
+                return sessionKey;
+            default:
+                logInfo(log, "CVN10 session key derivation.");
+                sessionKey = udkAsSessionKey();
+                logDebug(log, "UDK itself as session key: {}.", sessionKey);
+                return sessionKey;
         }
-        return null;
-
     }
     /**
      * Return Unique Derivation Key itself as session key.
@@ -78,13 +85,15 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
         String emvCskKeyA, emvCskKeyB;
         // Get UDK Key A and build EMV CS Key A Component
         emvCskKeyAComponent = getEMVCommonSessionKeyAComponent();
-        emvCskKeyA = tripleDESEncrypt(emvCskKeyAComponent, inputKey);
+        emvCskKeyA = tripleDESEncrypt(emvCskKeyAComponent,
+                inputKey);
         // Get UDK Key B and build EMV CS Key B Component
         emvCskKeyBComponent = getEMVCommonSessionKeyBComponent();
-        emvCskKeyB = tripleDESEncrypt(emvCskKeyBComponent, inputKey);
+        emvCskKeyB = tripleDESEncrypt(emvCskKeyBComponent,
+                inputKey);
         // Return generated EMV CSK method session key
-        log.debug(this.getClass() + " Session Key components generated: Component A {} / Component B {}.", emvCskKeyAComponent, emvCskKeyBComponent);
-        log.debug(this.getClass() + " Session Key generated: Key A {} / Key B {}.", emvCskKeyA, emvCskKeyB);
+        logDebug(log, "Session Key components generated: Component A {} / Component B {}.", emvCskKeyAComponent, emvCskKeyBComponent);
+        logDebug(log, "Session Key generated: Key A {} / Key B {}.", emvCskKeyA, emvCskKeyB);
         return emvCskKeyA + emvCskKeyB;
 
     }
@@ -134,14 +143,4 @@ public class EMVSessionKeyDerivator extends SelfValidator<EMVSessionKeyDerivator
                 ", cryptogramVersionNumber='" + cryptogramVersionNumber + '\'' +
                 '}';
     }
-    /**
-     * Method for logging the input data and output data for the EMVUniqueDerivationKeyDerivator function, when the debug log level is enabled.
-     */
-    private void debugLog(){
-        if (log.isDebugEnabled()) {
-            log.debug(this.getClass() + " Debug log follows: ");
-            log.debug(this.getClass() + " --> Attribute values : {}", this);
-        }
-    }
-
 }

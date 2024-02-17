@@ -16,7 +16,10 @@ public class Padding {
      *                  When false the padding character will be padded to the right.
      * @return Updated inputData padded with the padding character.
      */
-    public static String padString(String inputData, String paddingCharacter, int paddedStringLength, boolean padToLeft){
+    public static String padString(String inputData,
+                                   String paddingCharacter,
+                                   int paddedStringLength,
+                                   boolean padToLeft){
         int inputDataLength = inputData.length();
         int timesToPad = paddedStringLength - inputDataLength;
         if (timesToPad > 0){

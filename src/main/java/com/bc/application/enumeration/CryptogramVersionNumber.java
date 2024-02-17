@@ -11,9 +11,10 @@ public enum CryptogramVersionNumber {
     CVN10("CVN10"),
     CVN14("CVN14"),
     CVN18("CVN18"),
-    CVN22("CVN22");
+    CVN22("CVN22"),
+    CVN2C("CVN2C");
 
-    private final String value;
+    public final String value;
 
     /**
      * Method to check if the enum object value is set to CVN10.
@@ -45,6 +46,13 @@ public enum CryptogramVersionNumber {
      */
     public boolean isCVN22(){
         return this.equals(CVN22);
+    }
+    /**
+     * Method to check if the enum object value is set to CVN2C.
+     * @return True when value is set to CVN2C.
+     */
+    public boolean isCVN2C(){
+        return this.equals(CVN2C);
     }
 
 }

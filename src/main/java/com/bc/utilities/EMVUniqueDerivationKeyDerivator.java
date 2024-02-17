@@ -9,14 +9,15 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import static com.bc.model.pattern.CommonPattern.*;
 import static com.bc.model.constants.PaymentSchemeConstants.*;
-
 /**
  * This class implements the methods for deriving various cryptographic keys used in the EMV functions.
  * Note: All attributes except the key are mandatory input for the proper functioning of the key derivation methods.
  */
 @Getter
 @Slf4j
-public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDerivationKeyDerivator> {
+public class EMVUniqueDerivationKeyDerivator
+        extends SelfValidator<EMVUniqueDerivationKeyDerivator>
+        implements LoggerUtility {
     //Input attributes
     @NotNull
     @Pattern(regexp = IS_A_VALID_TDEA_KEY)
@@ -36,23 +37,31 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
     /**
      * All args constructor
      */
-    public EMVUniqueDerivationKeyDerivator(String inputKey, String pan, String panSequenceNumber,
-                                           PaymentScheme paymentScheme, CryptogramVersionNumber cryptogramVersionNumber,
-                                           EMVUDKDerivationMethod emvudkDerivationMethod){
-        debugLog();
+    public EMVUniqueDerivationKeyDerivator(String inputKey,
+                                           String pan,
+                                           String panSequenceNumber,
+                                           PaymentScheme paymentScheme,
+                                           CryptogramVersionNumber cryptogramVersionNumber,
+                                           EMVUDKDerivationMethod emvudkDerivationMethod) {
         this.inputKey = inputKey;
         this.pan = pan;
         this.panSequenceNumber = panSequenceNumber;
         this.paymentScheme = paymentScheme;
         this.cryptogramVersionNumber = cryptogramVersionNumber;
         this.emvudkDerivationMethod = emvudkDerivationMethod;
-        this.selfValidate();
+        selfValidate();
+        logInfo(log,
+                "Self validated."
+        );
     }
     /**
      * Driver method for generating the requested TDEA key from the Master key.
      */
     public String generateUniqueDerivationKey() {
-
+        logDebug(log,
+                "Class data {}.",
+                this
+        );
         return generateUdk();
 
     }
@@ -62,6 +71,10 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
     private String generateUdk(){
 
         if (emvudkDerivationMethod.isMETHOD_A()) {
+            logInfo(log,
+                    "UDK derivation using EMV Option A.",
+                    emvudkDerivationMethod
+            );
             return getUniqueDerivationKeyOptionA();
         }
         return null;
@@ -80,10 +93,22 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
         // Build UDK B component
         udkKeyBComponent = getUdkKeyBComponent(udkKeyAComponent);
         // Build UDK Key A and UDK Key B
-        udkKeyA = tripleDESEncrypt(udkKeyAComponent, inputKey);
-        udkKeyB = tripleDESEncrypt(udkKeyBComponent, inputKey);
-        log.debug(this.getClass() + " Unique Derivation Key components generated: Component A {} / Component B {}.", udkKeyAComponent, udkKeyBComponent);
-        log.debug(this.getClass() + " Unique Derivation Key: Key A {} / Key B {}.", udkKeyA, udkKeyB);
+        udkKeyA = tripleDESEncrypt(udkKeyAComponent,
+                inputKey
+        );
+        udkKeyB = tripleDESEncrypt(udkKeyBComponent,
+                inputKey
+        );
+        logDebug(log,
+                "UDK components generated: Component A {} / Component B {}.",
+                udkKeyAComponent,
+                udkKeyBComponent
+        );
+        logDebug(log,
+                "UDK: Key A {} / Key B {}.",
+                udkKeyA,
+                udkKeyB
+        );
         return udkKeyA + udkKeyB;
 
     }
@@ -93,9 +118,16 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
      */
     private String getUdkKeyAComponent(){
         if (panSequenceNumber.length() == 2) {
-            return  (pan + panSequenceNumber).substring(2);
+            return  (pan +
+                    panSequenceNumber)
+                    .substring(2
+                    );
         } else {
-            return (pan + "0" + panSequenceNumber).substring(2);
+            return (pan +
+                    "0" +
+                    panSequenceNumber)
+                    .substring(2
+                    );
         }
     }
     /**
@@ -103,10 +135,12 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
      * @return UDK Key B component.
      */
     private String getUdkKeyBComponent(String udkLeftComponent){
-
-        Xor xor = new Xor(udkLeftComponent, "F".repeat(DEFAULT_PAN_LENGTH));
+        Xor xor = new Xor(udkLeftComponent,
+                "F".repeat(
+                        DEFAULT_PAN_LENGTH
+                )
+        );
         return xor.doXor();
-
     }
     /**
      * Perform Triple DES Encryption.
@@ -114,13 +148,12 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
      * @param inputKey Triple DES Key to encrypt the data.
      * @return Encrypted data String.
      */
-    private String tripleDESEncrypt(String inputData, String inputKey) {
-
+    private String tripleDESEncrypt(String inputData,
+                                    String inputKey) {
         TripleDES tripleDES = new TripleDES();
         tripleDES.setInputData(inputData);
         tripleDES.setKey(inputKey);
         return tripleDES.encrypt();
-
     }
     /**
      * Override method for the object's default toString method.
@@ -137,14 +170,4 @@ public class EMVUniqueDerivationKeyDerivator extends SelfValidator<EMVUniqueDeri
                 ", emvudkDerivationMethod='" + emvudkDerivationMethod + '\'' +
                 '}';
     }
-    /**
-     * Method for logging the input data and output data for the EMVUniqueDerivationKeyDerivator function, when the debug log level is enabled.
-     */
-    private void debugLog(){
-        if (log.isDebugEnabled()) {
-            log.debug(this.getClass() + " Debug log follows: ");
-            log.debug(this.getClass() + " --> Attribute values : {}", this);
-        }
-    }
-
 }

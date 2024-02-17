@@ -13,17 +13,17 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-
 /**
  * Class implementing wrapper functions for Triple Data Encryption Standard (TDES) Algorithm functions
  * using java standard Crypto libraries.
  */
 @Slf4j
 @Setter
-public class TripleDES {
+public class TripleDES
+        implements LoggerUtility {
     private String inputData;
     private String key;
-    private final String DESEDE = "DESede";
+    private final String DES_EDE = "DESede";
     private final String MODE = "ECB";
     private final String PADDING = "NoPadding";
     private final boolean ENCRYPT = true;
@@ -41,30 +41,26 @@ public class TripleDES {
      * @return Cipher text generated from clear text after encryption.
      */
     public String encrypt(){
-
         initialize(ENCRYPT);
-        debugLog();
-        byte [] decodedInputData = decodeinputDataTextToByteArray();
+        byte [] decodedInputData = decodeInputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
-
+        logInfo(log, "TDEA Encryption request processed!");
+        logDebug(log, "Encrypted data: {}.", outputData);
         return outputData;
-
     }
     /**
      * Method to perform a Triple DES decryption of a cipher text using a key passed
      * @return Clear text generated from cipher text after decryption.
      */
     public String decrypt(){
-
         initialize(DECRYPT);
-        debugLog();
-        byte [] decodedInputData = decodeinputDataTextToByteArray();
+        byte [] decodedInputData = decodeInputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
-
+        logInfo(log, "TDEA Decryption request processed!");
+        logDebug(log, "Decrypted data: {}.", outputData);
         return outputData;
-
     }
     /**
      * Method to initialize the Cipher object to set algorithm to DESede and perform encryption or decryption.
@@ -72,7 +68,6 @@ public class TripleDES {
      *                else the Cipher object will be set to DESede decrypt.
      */
     private void initialize(boolean encrypt) {
-
         initializeDESAlgorithm();
         initializeDESedeKey();
         if (encrypt) {
@@ -80,29 +75,26 @@ public class TripleDES {
         } else {
             initializeForDesDecryption();
         }
-
     }
     /**
      * Initialize Cipher object des with the DESede algorithm with desired mode and padding.
      */
     private void initializeDESAlgorithm(){
-
         StringBuilder algorithmWithModeAndPadding = new StringBuilder();
-
-        algorithmWithModeAndPadding.append(DESEDE)
+        algorithmWithModeAndPadding.append(DES_EDE)
                 .append("/")
                 .append(MODE)
                 .append("/")
                 .append(PADDING);
 
         try {
-            des = Cipher.getInstance(String.valueOf(algorithmWithModeAndPadding));
-        } catch (NoSuchPaddingException | NoSuchAlgorithmException cipherException) {
-            debugLog();
-            throw new RuntimeException(this.getClass() + " - Cipher object algorithm initialization failed - "
-                    + cipherException.getCause() + " - " + cipherException.getMessage());
+            des = Cipher.getInstance(algorithmWithModeAndPadding.toString());
+        } catch (NoSuchPaddingException |
+                 NoSuchAlgorithmException cipherException) {
+            throwExceptionAndTerminate("Cipher object algorithm initialization failed",
+                    cipherException
+            );
         }
-
     }
     /**
      * Decode the plaintext key to byte array and initialize the Key object.
@@ -110,65 +102,70 @@ public class TripleDES {
     private void initializeDESedeKey() {
         try {
             convertToTripleLengthTDEAKey();
-            secretKey = new SecretKeySpec(Hex.decodeHex(workTdeaInputKey), DESEDE);
+            secretKey = new SecretKeySpec(Hex.decodeHex(
+                    workTdeaInputKey),
+                    DES_EDE
+            );
         } catch (DecoderException decoderException){
-            debugLog();
-            throw new RuntimeException(this.getClass() + " - Key decoding to byte array failed - "
-                    + decoderException.getCause() + " - " + decoderException.getMessage());
+            throwExceptionAndTerminate("Key decoding to byte array failed - ",
+                    decoderException
+            );
         }
-
     }
     /**
      * Initialize Cipher object for encryption.
      */
     private void initializeForDesEncryption(){
         try {
-            des.init(Cipher.ENCRYPT_MODE, secretKey);
+            des.init(Cipher.ENCRYPT_MODE,
+                    secretKey
+            );
         } catch (InvalidKeyException invalidKeyException){
-            debugLog();
-            throw new RuntimeException(this.getClass() + " - Cipher object initialization failed due to invalid key - "
-                    + invalidKeyException.getCause() + " - " + invalidKeyException.getMessage());
+            throwExceptionAndTerminate("Cipher object initialization failed due to invalid key",
+                    invalidKeyException);
         }
-
     }
     /**
      * Initialize Cipher object for decryption.
      */
     private void initializeForDesDecryption(){
         try {
-            des.init(Cipher.DECRYPT_MODE, secretKey);
+            des.init(Cipher.DECRYPT_MODE,
+                    secretKey
+            );
         } catch (InvalidKeyException invalidKeyException) {
-            debugLog();
-            throw new RuntimeException(this.getClass() + " - Cipher object initialization failed due to invalid key - "
-                    + invalidKeyException.getCause() + " - " + invalidKeyException.getMessage());
+            throwExceptionAndTerminate("Cipher object initialization failed due to invalid key",
+                    invalidKeyException);
         }
-
     }
     /**
      * Transform the input data to byte array.
      */
-    private byte [] decodeinputDataTextToByteArray(){
+    private byte [] decodeInputDataTextToByteArray(){
+        byte [] decodedHexData = new byte[0];
         try {
-            return Hex.decodeHex(inputData);
+            decodedHexData = Hex.decodeHex(inputData);
         } catch (DecoderException decoderException){
-            debugLog();
-            throw new RuntimeException(this.getClass() + " - Clear text data decoding to byte array failed - "
-                    + decoderException.getCause() + " - " + decoderException.getMessage());
+            throwExceptionAndTerminate("Clear text data decoding to byte array failed",
+                    decoderException
+            );
         }
-
+        return decodedHexData;
     }
     /**
      * Run the DESede algorithm.
      */
     private byte [] runDESede(byte [] decodedInputData) {
-        try {
-            return des.doFinal(decodedInputData);
-        } catch (IllegalBlockSizeException | BadPaddingException cipherException){
-            debugLog();
-            throw new RuntimeException(this.getClass() + " - Encrypt/Decrypt operation failed - "
-                    + cipherException.getCause() + " - " + cipherException.getMessage());
+        byte [] cryptoOutputData = new byte[0];
+        try
+        {
+            cryptoOutputData = des.doFinal(decodedInputData);
+        } catch (IllegalBlockSizeException |
+                 BadPaddingException cryptoException){
+            throwExceptionAndTerminate("Encrypt/Decrypt operation failed",
+                    cryptoException);
         }
-
+        return cryptoOutputData;
     }
     /**
      * Method to convert a single or double length TDEA key to a triple length TDEA key.
@@ -179,15 +176,28 @@ public class TripleDES {
         final int KEY_LENGTH_TDEA_DOUBLE = 32;
         if (key.length() == KEY_LENGTH_TDEA_SINGLE) {
             workTdeaInputKey = key + key + key;
-            log.debug("Single length TDEA Key received: " + key);
-            log.debug("Expanded triple length TDEA Key: " + workTdeaInputKey);
+            logDebug(log,
+                    "Single length TDEA Key received {}.",
+                    key,
+                    " Key expanded to triple length TDEA Key: {}.",
+                    workTdeaInputKey
+            );
         } else if (key.length() == KEY_LENGTH_TDEA_DOUBLE) {
-            workTdeaInputKey = key + key.substring(0, KEY_LENGTH_TDEA_SINGLE);
-            log.debug("Double length TDEA Key received: " + key);
-            log.debug("Expanded triple length TDEA Key: " + workTdeaInputKey);
+            workTdeaInputKey = key + key.substring(0,
+                    KEY_LENGTH_TDEA_SINGLE
+            );
+            logDebug(log,
+                    "Double length TDEA Key received {}.",
+                    key,
+                    " Key expanded to triple length TDEA Key: {}.",
+                    workTdeaInputKey
+            );
         } else {
             workTdeaInputKey = key;
-            log.debug("Triple length TDEA Key received: " + key + ". No key expansion performed!");
+            logInfo(log,
+                    "Triple length TDEA Key input: {}.",
+                    workTdeaInputKey
+            );
         }
     }
     /**
@@ -205,14 +215,19 @@ public class TripleDES {
 
     }
     /**
-     * Method for logging the input data and output data for the EMVUniqueDerivationKeyDerivator function, when the debug log level is enabled.
+     * Method to raise an exception and terminate processing.
+     * @param exception Generic exception object.
+     * @param message Message to be included in the exception.
      */
-    private void debugLog(){
-
-        if (log.isDebugEnabled()) {
-            log.debug(" Debug log : {}", this);
-        }
-
+    private void throwExceptionAndTerminate(String message,
+                                            Exception exception) {
+        throw new RuntimeException(this.getClass() +
+                " --> " +
+                message +
+                " Cause: " +
+                exception.getCause() +
+                " Message: " +
+                exception.getMessage()
+        );
     }
-
 }

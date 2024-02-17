@@ -31,6 +31,8 @@ public class CommonPattern {
     public static final String IS_A_VALID_TDEA_KEY = "^[\\da-fA-F]{16}(?:[\\da-fA-F]{16}){0,2}$";
     // IAD 14 to 64 Hexadecimal numbers with even stepping
     public static final String IS_VALID_IAD_FORMAT = "^[\\da-fA-F]{14}(?:[\\da-fA-F]{2}){0,25}$";
+    // Visa IAD starting character, i.e., must begin with "06" or "1F".
+    public static final String CONTAINS_VALID_VISA_IAD_START_BYTE = "^(06|1F|1f).*";
     // Date Pattern
     // ISO Date - YYYY-MM-DD format
     public static final String IS_VALID_ISO_DATE_YYYY_MM_DD = "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";

@@ -22,12 +22,21 @@ public class ISOIEC97971Padding {
         final String PADDING_CHAR = "0"; // Padding character 0.
         // Variables
         int inputDataLength = inputData.length();
-        int requiredInputDataLength = ((int) Math.ceil((float) inputDataLength / BLOCK_SIZE) * BLOCK_SIZE);
+        int requiredInputDataLength = ((int)
+                Math.ceil((float)
+                        inputDataLength /
+                        BLOCK_SIZE)
+                * BLOCK_SIZE
+        );
         // Check if transaction data is multiple of 16, else pad with x"0" chars till the length is a multiple of 16.
         if (inputDataLength  == requiredInputDataLength){
             return inputData;
         } else {
-            return Padding.padString(inputData, PADDING_CHAR, requiredInputDataLength, false);
+            return Padding.padString(inputData,
+                    PADDING_CHAR,
+                    requiredInputDataLength,
+                    false
+            );
         }
     }
     /**
@@ -51,12 +60,20 @@ public class ISOIEC97971Padding {
         // Variables
         inputData = inputData + MANDATORY_PADDING_CHAR;
         int inputDataLength = inputData.length();
-        int requiredInputDataLength = ((int) Math.ceil((float) inputDataLength / BLOCK_SIZE) * BLOCK_SIZE);
+        int requiredInputDataLength = ((int)
+                Math.ceil((float)
+                        inputDataLength /
+                        BLOCK_SIZE)
+                * BLOCK_SIZE
+        );
         // Check if transaction data is multiple of 16, else pad with x"0" chars till the length is a multiple of 16.
         if (inputDataLength  == requiredInputDataLength){
             return inputData;
         } else {
-            return Padding.padString(inputData, OPTIONAL_PADDING_CHAR, requiredInputDataLength, false);
+            return Padding.padString(inputData,
+                    OPTIONAL_PADDING_CHAR,
+                    requiredInputDataLength,
+                    false);
         }
     }
 
