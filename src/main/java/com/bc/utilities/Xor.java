@@ -12,7 +12,7 @@ import org.apache.commons.codec.binary.Hex;
  */
 @Slf4j
 public class Xor
-        extends SelfValidator<Xor>
+        extends AbstractSelfValidator<Xor>
         implements LoggerUtility {
     @NotEmpty
     @Pattern(regexp = "^[\\da-fA-F]+$")

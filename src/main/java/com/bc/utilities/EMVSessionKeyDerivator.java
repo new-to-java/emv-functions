@@ -15,7 +15,7 @@ import static com.bc.model.pattern.CommonPattern.*;
 @Getter
 @Slf4j
 public class EMVSessionKeyDerivator
-        extends SelfValidator<EMVSessionKeyDerivator>
+        extends AbstractSelfValidator<EMVSessionKeyDerivator>
         implements LoggerUtility {
     //Input attributes
     @NotNull

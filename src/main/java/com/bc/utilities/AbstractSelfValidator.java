@@ -7,12 +7,12 @@ import java.util.Set;
  * Class defining the methods for performing bean validation and raising constraint violation, if invalid attributes
  * are detected.
  */
-public abstract class SelfValidator <T> {
+public abstract class AbstractSelfValidator<T> {
     private final Validator validator;
     /**
      * Constructor
      */
-    public SelfValidator(){
+    public AbstractSelfValidator(){
         ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
     }

@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import java.util.*;
-import static com.bc.utilities.IADStaticData.*;
+import static com.bc.model.constants.IADStaticData.*;
 /**
  * Class defining methods for parsing a Visa specific IAD and splitting the IAD into the following components.
  * - Length Indicator - Byte 1 - Set to "06" for Format 0/1/3 IAD and set to "1F" for Format 2 IAD.
@@ -24,7 +24,7 @@ import static com.bc.utilities.IADStaticData.*;
 @Setter
 @Slf4j
 public class VisaIADParser
-        extends SelfValidator<VisaIADParser>
+        extends AbstractSelfValidator<VisaIADParser>
         implements LoggerUtility {
     @NotEmpty
     @Pattern.List({

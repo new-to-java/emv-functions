@@ -2,96 +2,111 @@ package com.bc.utilities;
 
 import com.bc.application.domain.CryptogramRequest;
 import com.bc.application.enumeration.CryptogramVersionNumber;
+import com.bc.application.enumeration.PaymentScheme;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class defining methods for generating a Mastercard Payment Scheme Application Cryptogram (ARQC) and Response Cryptogram (ARPC).
+ * Class defining methods for generating Payment Scheme specific Application Cryptogram (ARQC) and Response Cryptogram (ARPC).
  * Note: ARPC derivation implementation is pending.
  */
 @Slf4j
-public class MastercardApplicationCryptogramGenerator
+public abstract class AbstractApplicationCryptogramGenerator
         implements LoggerUtility {
     /**
-     * Driver method for generating Application Cryptogram based on Cryptogram Version Number (CVN) for Mastercard
-     * and will call CVN specific methods to generate the Application Cryptogram.
+     * Driver method for generating Application Cryptogram based on Cryptogram Version Number (CVN),
+     * based on Payment Scheme and will call CVN specific methods to generate the Application Cryptogram.
      * @return Application Cryptogram (ARQC).
      */
-    public String generateMastercardApplicationCryptogram(CryptogramRequest cryptogramRequest,
-                                               String sessionKey,
-                                               CryptogramVersionNumber cryptogramVersionNumber,
-                                               String cardVerificationResults){
-        // Build Mastercard Transaction Data
-        String transactionData = buildMastercardTransactionData(cryptogramRequest,
+    public String generateApplicationCryptogram(CryptogramRequest cryptogramRequest,
+                                                          String sessionKey,
+                                                          CryptogramVersionNumber cryptogramVersionNumber,
+                                                          String cardVerificationResults,
+                                                          PaymentScheme paymentScheme){
+        // Build Application Cryptogram transaction data
+        String transactionData = buildTransactionData(cryptogramRequest,
                 cryptogramVersionNumber,
                 cardVerificationResults
         );
-        logDebug(log, "Mastercard transaction data generated: {}", transactionData);
-        // PAD transaction data based on CVN
-        transactionData = checkCvnAndPadTransactionData(cryptogramVersionNumber,
+        logDebug(log,
+                "{} Cryptogram Transaction data generated: {}",
+                paymentScheme.toString(),
                 transactionData
         );
-        logDebug(log, "Mastercard transaction data with ISO 97971 padding: {}", transactionData);
+        // PAD transaction data based on CVN
+        transactionData = isoPadTransactionData(transactionData,
+                cryptogramVersionNumber
+        );
+        logDebug(log,
+                "{} transaction data with ISO 97971 padding: {}",
+                paymentScheme.toString(),
+                transactionData);
         return generateArqc(transactionData, sessionKey);
     }
 
     /**
-     * Check Cryptogram Version Number and pad the Mastercard transaction data with ISO 97971 Method1 or Method2 padding.
+     * Perform transaction data padding based on ISO 97971 padding method based on payment scheme.
+     * or Method2 padding.
+     *
      * @param cryptogramVersionNumber Cryptogram Version Number.
-     * @param transactionData Transaction data to be padded.
+     * @param transactionData         Transaction data to be padded.
      * @return Padded transaction data.
      */
-    private String checkCvnAndPadTransactionData(CryptogramVersionNumber cryptogramVersionNumber,
-                                                 String transactionData) {
-        logDebug(log, "Mastercard CVN \"{}\" card detected!", cryptogramVersionNumber);
-        // Mastercard uses ISO 97971-Padding Method 2 for all CVNs
-        return ISOIEC97971Padding.performIsoIec97971Method2Padding(
-                transactionData
-            );
-    }
+    protected abstract String isoPadTransactionData(String transactionData,
+                                                   CryptogramVersionNumber cryptogramVersionNumber);
     /**
-     * Generate Mastercard transaction data for Application Cryptogram generation.
+     * Generate Payment Scheme specific transaction data for Application Cryptogram generation.
      * @param cryptogramRequest Application cryptogram generation request received.
      * @param cryptogramVersionNumber Cryptogram Version Number.
      * @param cardVerificationResults Card Verification Results.
-     * @return Formatted Mastercard transaction data generation for generating Application Cryptogram.
+     * @return Formatted Payment Scheme specific transaction data generation for generating Application Cryptogram.
      */
-    private String buildMastercardTransactionData(CryptogramRequest cryptogramRequest,
-                                            CryptogramVersionNumber cryptogramVersionNumber,
-                                            String cardVerificationResults){
-        StringBuilder transactionData = new StringBuilder();
+    private String buildTransactionData(CryptogramRequest cryptogramRequest,
+                                                  CryptogramVersionNumber cryptogramVersionNumber,
+                                                  String cardVerificationResults){
+        StringBuilder transactionDataBuilder = new StringBuilder();
         // Pad and build transaction data
         //  1. Amount authorised                - Length: 12 characters
-        transactionData.append(getAndFormatAmount(cryptogramRequest.getAmountAuthorised()));
+        transactionDataBuilder.append(getAndFormatAmount(cryptogramRequest.getAmountAuthorised()));
         //  2. Amount Other                     - Length: 12 characters
-        transactionData.append(getAndFormatAmount(cryptogramRequest.getAmountOther()));
+        transactionDataBuilder.append(getAndFormatAmount(cryptogramRequest.getAmountOther()));
         //  3. Terminal Country Code            - Length: 4 characters
-        transactionData.append(getAndFormatCountryCode(cryptogramRequest.getTerminalCountryCode()));
+        transactionDataBuilder.append(getAndFormatCountryCode(cryptogramRequest.getTerminalCountryCode()));
         //  4. Terminal Verification Results    - Length: 10 characters
-        transactionData.append(cryptogramRequest.getTerminalVerificationResults());
+        transactionDataBuilder.append(cryptogramRequest.getTerminalVerificationResults());
         //  5. Transaction Currency Code        - Length: 4 characters
-        transactionData.append(getAndFormatCurrencyCode(cryptogramRequest.getTransactionCurrencyCode()));
+        transactionDataBuilder.append(getAndFormatCurrencyCode(cryptogramRequest.getTransactionCurrencyCode()));
         //  6. Transaction Date (YYMMDD format) - Length: 6 characters
-        transactionData.append(getAndFormatTransactionDateToYYMMDD(cryptogramRequest.getTransactionDate()));
+        transactionDataBuilder.append(getAndFormatTransactionDateToYYMMDD(cryptogramRequest.getTransactionDate()));
         //  7. Transaction Type                 - Length: 2 characters
-        transactionData.append(cryptogramRequest.getTransactionType());
+        transactionDataBuilder.append(cryptogramRequest.getTransactionType());
         //  8. Unpredictable Number             - Length: 8 characters
-        transactionData.append(cryptogramRequest.getUnpredictableNumber());
+        transactionDataBuilder.append(cryptogramRequest.getUnpredictableNumber());
         //  9. Application Interchange Profile  - Length: 4 characters
-        transactionData.append(cryptogramRequest.getApplicationInterchangeProfile());
+        transactionDataBuilder.append(cryptogramRequest.getApplicationInterchangeProfile());
         // 10. Application Transaction Counter  - Length: 4 characters
-        transactionData.append(getAndFormatApplicationTransactionCounter(cryptogramRequest.getApplicationTransactionCounter()));
-        // 11. CVR  or IAD (Based on CVN)       - Length 8 characters or Length between 14 and 64 characters
-        switch (cryptogramVersionNumber){
-            case CVN10: // For CVN 10 Mastercard cards use 8 byte CVR
-            case CVN14: // For CVN 14 Mastercard cards use 6 byte CVR
-                transactionData.append(cardVerificationResults);
-                break;
-        }
-        return transactionData.toString();
-
+        transactionDataBuilder.append(getAndFormatApplicationTransactionCounter(cryptogramRequest.getApplicationTransactionCounter()));
+        // 11. CVR  or IAD (Based on Payment Scheme and CVN) - Length 8 or 12 characters for CVR,
+        // or Length between 14 and 64 characters for IAD
+        return appendFinalDataElementToTransactionData(transactionDataBuilder,
+                cryptogramVersionNumber,
+                cardVerificationResults,
+                cryptogramRequest.getIssuerApplicationData()).toString();
     }
+    /**
+     * Pad transaction data for Application Cryptogram generation based on payment scheme.
+     * @param transactionDataBuilder Transaction data for cryptogram generation.
+     * @param cryptogramVersionNumber Cryptogram Version Number from Issuer Application Data.
+     * @param cardVerificationResults Card Verification Results from Issuer Application Data.
+     * @param issuerApplicationData Issuer Application Data.
+     * @return Padded transaction data for Application Cryptogram generation.
+     */
+    protected abstract StringBuilder appendFinalDataElementToTransactionData(StringBuilder transactionDataBuilder,
+                                                                   CryptogramVersionNumber cryptogramVersionNumber,
+                                                                   String cardVerificationResults,
+                                                                   String issuerApplicationData);
     /**
      * Format amount and ensure that they are 12 characters long.
      * @param amount Amount Authorised or Amount Other values received from input.

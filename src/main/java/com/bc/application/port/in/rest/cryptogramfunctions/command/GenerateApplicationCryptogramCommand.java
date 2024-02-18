@@ -1,7 +1,7 @@
 package com.bc.application.port.in.rest.cryptogramfunctions.command;
 
 import com.bc.utilities.LoggerUtility;
-import com.bc.utilities.SelfValidator;
+import com.bc.utilities.AbstractSelfValidator;
 import jakarta.validation.constraints.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import static com.bc.model.pattern.CommonPattern.*;
@@ -10,7 +10,7 @@ import static com.bc.model.pattern.CommonPattern.*;
  */
 @Slf4j
 public class GenerateApplicationCryptogramCommand
-        extends SelfValidator<GenerateApplicationCryptogramCommand>
+        extends AbstractSelfValidator<GenerateApplicationCryptogramCommand>
         implements LoggerUtility {
     @Pattern(regexp = IS_A_16_DIGIT_HEXADECIMAL_NUMBER)
     public String pan;

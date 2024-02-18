@@ -16,7 +16,7 @@ import static com.bc.model.constants.PaymentSchemeConstants.*;
 @Getter
 @Slf4j
 public class EMVUniqueDerivationKeyDerivator
-        extends SelfValidator<EMVUniqueDerivationKeyDerivator>
+        extends AbstractSelfValidator<EMVUniqueDerivationKeyDerivator>
         implements LoggerUtility {
     //Input attributes
     @NotNull

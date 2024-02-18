@@ -3,7 +3,7 @@ package com.bc.adapter.in.rest.cryptogramfunctions;
 import com.bc.application.domain.CryptogramResponse;
 import com.bc.application.port.in.rest.cryptogramfunctions.command.GenerateApplicationCryptogramCommand;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestToCommandMapper;
-import com.bc.application.service.impl.VisaCryptogramServiceImpl;
+import com.bc.application.service.impl.VisaCryptogramFunctionsServiceImpl;
 import com.bc.model.dto.GenerateACRequest;
 import com.bc.model.dto.GenerateACResponse;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACDomainToResponseMapper;
@@ -19,7 +19,7 @@ import jakarta.ws.rs.core.Response;
 public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
     // Service - Pending build and injection
     @Inject
-    VisaCryptogramServiceImpl visaCryptogramService;
+    VisaCryptogramFunctionsServiceImpl visaCryptogramService;
     // Mappers
     @Inject
     GenerateACRequestToCommandMapper generateACRequestToCommandMapper;
