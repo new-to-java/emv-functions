@@ -1,6 +1,7 @@
 package com.bc.adapter.in.rest.cryptogramfunctions;
 
 import com.bc.application.domain.CryptogramResponse;
+import com.bc.application.enumeration.PaymentScheme;
 import com.bc.application.port.in.rest.cryptogramfunctions.command.GenerateApplicationCryptogramCommand;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestToCommandMapper;
 import com.bc.application.service.impl.VisaCryptogramFunctionsServiceImpl;
@@ -8,9 +9,11 @@ import com.bc.model.dto.GenerateACRequest;
 import com.bc.model.dto.GenerateACResponse;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACDomainToResponseMapper;
 import com.bc.application.port.in.rest.cryptogramfunctions.client.CryptogramFunctionsAPI;
+import com.bc.utilities.DeterminePaymentScheme;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.client.jaxrs.PublisherRxInvoker;
 
 /**
  * REST API interface adaptor implementing the endpoints and methods that will host various EMV cryptogram functions.
@@ -41,15 +44,37 @@ public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
         GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand =
                 generateACRequestToCommandMapper.mapGenerateACRequestToCommand(generateACRequest);
         CryptogramResponse cryptogramResponse =
-                visaCryptogramService.getApplicationCryptogram(generateApplicationCryptogramCommand);
+                determinePaymentSchemeAndGenerateCryptogram(generateApplicationCryptogramCommand);
         GenerateACResponse generateACResponse =
                 generateACDomainToResponseMapper.mapFromApplicationCryptogramResponse(cryptogramResponse);
         return Response.status(Response.Status.CREATED).entity(generateACResponse).build();
     }
-    // Implement the following methods:
-    // Driver method which will
-    //      Call another method to determine payment scheme
-    //      Based on payment scheme, will call the corresponding Cryptogram Service
-    //      Return the cryptogram generated to the API resource.
-
+    /**
+     * Determine payment scheme from PAN and call corresponding application cryptogram generation service.
+     * @param generateApplicationCryptogramCommand Command object mapped from request.
+     * @return Cryptogram response object.
+     */
+    private CryptogramResponse determinePaymentSchemeAndGenerateCryptogram(GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand){
+        PaymentScheme paymentScheme = DeterminePaymentScheme.fromPan(generateApplicationCryptogramCommand.pan);
+        switch (paymentScheme){
+            case VISA:
+                return generateVisaApplicationCryptogram(generateApplicationCryptogramCommand);
+            case MASTERCARD:
+                return generateMastercardApplicationCryptogram(generateApplicationCryptogramCommand);
+        }
+        return null;
+    }
+    /**
+     * Generate a Visa Payment Scheme specific application cryptogram.
+     */
+    private CryptogramResponse generateVisaApplicationCryptogram(GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand){
+        return visaCryptogramService.getApplicationCryptogram(generateApplicationCryptogramCommand);
+    }
+    /**
+     * Generate a Mastercard Payment Scheme specific application cryptogram.
+     */
+    private CryptogramResponse generateMastercardApplicationCryptogram(GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand){
+        // TODO
+        return new CryptogramResponse();
+    }
 }
