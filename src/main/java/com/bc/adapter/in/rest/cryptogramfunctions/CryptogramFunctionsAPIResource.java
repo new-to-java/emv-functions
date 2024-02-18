@@ -13,8 +13,6 @@ import com.bc.utilities.DeterminePaymentScheme;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import org.jboss.resteasy.client.jaxrs.PublisherRxInvoker;
-
 /**
  * REST API interface adaptor implementing the endpoints and methods that will host various EMV cryptogram functions.
  */
