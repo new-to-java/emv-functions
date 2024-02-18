@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 @ApplicationScoped
 public class VisaCryptogramFunctionsServiceImpl
-        extends CryptogramFunctionsService<VisaIADParser> {
+        extends CryptogramFunctionsService {
     /**
      * Driver method for generating an Application Cryptogram.
      *

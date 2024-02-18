@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Slf4j
 @ApplicationScoped
-public abstract class CryptogramFunctionsService<IADParser>
+public abstract class CryptogramFunctionsService
         implements LoggerUtility {
     @Inject
     GenerateACCommandToDomainMapper mapper;
