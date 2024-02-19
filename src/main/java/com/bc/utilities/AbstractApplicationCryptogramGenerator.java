@@ -54,8 +54,12 @@ public abstract class AbstractApplicationCryptogramGenerator
      * @param transactionData         Transaction data to be padded.
      * @return Padded transaction data.
      */
-    protected abstract String isoPadTransactionData(String transactionData,
-                                                   CryptogramVersionNumber cryptogramVersionNumber);
+    protected String isoPadTransactionData(String transactionData,
+                                                   CryptogramVersionNumber cryptogramVersionNumber){
+        throw new UnsupportedOperationException(this.getClass().getName() + " --> Subclass must override and implement " +
+                "the method \"appendFinalDataElementToTransactionData\" before use."
+        );
+    }
     /**
      * Generate Payment Scheme specific transaction data for Application Cryptogram generation.
      * @param cryptogramRequest Application cryptogram generation request received.
@@ -103,10 +107,14 @@ public abstract class AbstractApplicationCryptogramGenerator
      * @param issuerApplicationData Issuer Application Data.
      * @return Padded transaction data for Application Cryptogram generation.
      */
-    protected abstract StringBuilder appendFinalDataElementToTransactionData(StringBuilder transactionDataBuilder,
+    protected StringBuilder appendFinalDataElementToTransactionData(StringBuilder transactionDataBuilder,
                                                                    CryptogramVersionNumber cryptogramVersionNumber,
                                                                    String cardVerificationResults,
-                                                                   String issuerApplicationData);
+                                                                   String issuerApplicationData){
+        throw new UnsupportedOperationException(this.getClass().getName() + " --> Subclass must override and implement " +
+                "the method \"appendFinalDataElementToTransactionData\" before use."
+        );
+    }
     /**
      * Format amount and ensure that they are 12 characters long.
      * @param amount Amount Authorised or Amount Other values received from input.

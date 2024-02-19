@@ -5,7 +5,7 @@ import com.bc.application.domain.CryptogramResponse;
 import com.bc.application.enumeration.CryptogramVersionNumber;
 import com.bc.application.enumeration.PaymentScheme;
 import com.bc.application.port.in.rest.cryptogramfunctions.command.GenerateApplicationCryptogramCommand;
-import com.bc.application.service.CryptogramFunctionsService;
+import com.bc.application.service.AbstractCryptogramFunctionsService;
 import com.bc.utilities.VisaApplicationCryptogramGenerator;
 import com.bc.utilities.VisaIADParser;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 @ApplicationScoped
 public class VisaCryptogramFunctionsServiceImpl
-        extends CryptogramFunctionsService {
+        extends AbstractCryptogramFunctionsService {
     /**
      * Driver method for generating an Application Cryptogram.
      *
