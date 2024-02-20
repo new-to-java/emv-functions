@@ -1,6 +1,7 @@
 package com.bc.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotEmpty;
 
 /**
  * DTO class defining REST API attributes for Application Cryptogram generation request payload.

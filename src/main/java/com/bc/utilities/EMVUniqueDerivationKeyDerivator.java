@@ -49,9 +49,10 @@ public class EMVUniqueDerivationKeyDerivator
         this.paymentScheme = paymentScheme;
         this.cryptogramVersionNumber = cryptogramVersionNumber;
         this.emvudkDerivationMethod = emvudkDerivationMethod;
+        // Call self validate
         selfValidate();
         logInfo(log,
-                "Self validated successful for object {}.",
+                "Self validation successful for object {}.",
                 this
         );
     }

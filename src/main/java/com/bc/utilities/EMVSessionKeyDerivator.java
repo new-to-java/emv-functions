@@ -44,9 +44,10 @@ public class EMVSessionKeyDerivator
         this.unpredictableNumber = unpredictableNumber;
         this.cryptogramVersionNumber = cryptogramVersionNumber;
         this.paymentScheme = paymentScheme;
+        // Call self validate
         selfValidate();
         logInfo(log,
-                "Self validated successful for object {}.",
+                "Self validation successful for object {}.",
                 this
         );
     }

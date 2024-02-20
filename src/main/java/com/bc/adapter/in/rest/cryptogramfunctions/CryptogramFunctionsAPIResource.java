@@ -13,10 +13,15 @@ import com.bc.utilities.DeterminePaymentScheme;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.Objects;
+
 /**
  * REST API interface adaptor implementing the endpoints and methods that will host various EMV cryptogram functions.
  */
 @ApplicationScoped
+@Slf4j
 public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
     // Service - Pending build and injection
     @Inject
@@ -41,11 +46,23 @@ public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
         // Command object to validate the Request.
         GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand =
                 generateACRequestToCommandMapper.mapGenerateACRequestToCommand(generateACRequest);
+        setAmountOtherToZeroIfNull(generateApplicationCryptogramCommand);
         CryptogramResponse cryptogramResponse =
                 determinePaymentSchemeAndGenerateCryptogram(generateApplicationCryptogramCommand);
         GenerateACResponse generateACResponse =
                 generateACDomainToResponseMapper.mapFromApplicationCryptogramResponse(cryptogramResponse);
         return Response.status(Response.Status.CREATED).entity(generateACResponse).build();
+    }
+
+    /**
+     * Check if AmountOther was provided in the request, if not set it to zeros.
+     * @param generateApplicationCryptogramCommand Command object with a AmountOther attribute with a value.
+     */
+    private void setAmountOtherToZeroIfNull(GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand){
+        String ZEROS = "0".repeat(12);
+        if (Objects.isNull(generateApplicationCryptogramCommand.amountOther)){
+            generateApplicationCryptogramCommand.amountOther = ZEROS;
+        }
     }
     /**
      * Determine payment scheme from PAN and call corresponding application cryptogram generation service.

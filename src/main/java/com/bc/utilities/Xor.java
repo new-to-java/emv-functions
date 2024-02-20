@@ -28,9 +28,10 @@ public class Xor
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.result = new StringBuilder();
-        this.selfValidate();
+        // Call self validate
+        selfValidate();
         logInfo(log,
-                "Self validated successful for object {}.",
+                "Self validation successful for object {}.",
                 this
         );
     }

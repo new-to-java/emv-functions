@@ -2,7 +2,9 @@ package com.bc.application.port.in.rest.cryptogramfunctions.command;
 
 import com.bc.utilities.LoggerUtility;
 import com.bc.utilities.AbstractSelfValidator;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.extern.slf4j.Slf4j;
 import static com.bc.model.pattern.CommonPattern.*;
 /**
@@ -12,33 +14,50 @@ import static com.bc.model.pattern.CommonPattern.*;
 public class GenerateApplicationCryptogramCommand
         extends AbstractSelfValidator<GenerateApplicationCryptogramCommand>
         implements LoggerUtility {
-    @Pattern(regexp = IS_A_16_DIGIT_HEXADECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_16_DIGIT_HEXADECIMAL_NUMBER, message = "Pan must be numeric, and exactly 16 digits long.")
     public String pan;
-    @Pattern(regexp = IS_A_1_OR_2_DIGIT_DECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_1_OR_2_DIGIT_DECIMAL_NUMBER, message = "PanSequenceNumber must be numeric, and 1 to 2 digits long.")
     public String panSequenceNumber;
-    @Pattern(regexp = IS_A_VALID_TDEA_KEY)
+    @NotEmpty
+    @Pattern(regexp = IS_A_VALID_TDEA_KEY, message = "IssuerMasterKey must be a single, double or triple length TDEA key, comprised of hexadecimal digits only.")
     public String issuerMasterKey;
-    @Pattern(regexp = IS_A_1_TO_12_DIGIT_DECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_1_TO_12_DIGIT_DECIMAL_NUMBER, message = "AmountAuthorised must be numeric, and 1 to 12 digits long.")
     public String amountAuthorised;
-    @Pattern(regexp = IS_A_1_TO_12_DIGIT_DECIMAL_NUMBER)
+    @Pattern(regexp = IS_A_1_TO_12_DIGIT_DECIMAL_NUMBER, message = "AmountOther must be numeric, and 1 to 12 digits long.")
     public String amountOther;
-    @Pattern(regexp = IS_A_3_DIGIT_DECIMAL_NUMBER)
+    //No country code validation is performed at this time
+    @NotEmpty
+    @Pattern(regexp = IS_A_3_DIGIT_DECIMAL_NUMBER, message = "TerminalCountryCode must be an ISO 3166-1 numeric code.")
     public String terminalCountryCode;
-    @Pattern(regexp = IS_A_10_DIGIT_HEXADECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_10_DIGIT_HEXADECIMAL_NUMBER, message = "TerminalVerificationResults must be exactly 10 hexadecimal digits.")
     public String terminalVerificationResults;
-    @Pattern(regexp = IS_A_3_DIGIT_DECIMAL_NUMBER)
+    //No country code validation is performed at this time
+    @NotEmpty
+    @Pattern(regexp = IS_A_3_DIGIT_DECIMAL_NUMBER, message = "TransactionCurrencyCode must be an ISO 3166-1 numeric code.")
     public String transactionCurrencyCode;
+    //No date validation is performed at this time
+    @NotEmpty
+    @Size(min = 10, max = 10, message = "Date must be in ISO Date Format (YYYY-MM-DD).")
     @Pattern(regexp = IS_VALID_ISO_DATE_YYYY_MM_DD)
     public String transactionDate;
-    @Pattern(regexp = IS_A_2_DIGIT_HEXADECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_2_DIGIT_HEXADECIMAL_NUMBER, message = "TransactionType must be exactly 2 hexadecimal digits.")
     public String transactionType;
-    @Pattern(regexp = IS_A_8_DIGIT_HEXADECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_8_DIGIT_HEXADECIMAL_NUMBER, message = "UnpredictableNumber must be exactly 8 hexadecimal digits.")
     public String unpredictableNumber;
-    @Pattern(regexp = IS_A_4_DIGIT_HEXADECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_4_DIGIT_HEXADECIMAL_NUMBER, message = "UnpredictableNumber must be exactly 4 hexadecimal digits.")
     public String applicationInterchangeProfile;
-    @Pattern(regexp = IS_A_1_TO_4_DIGIT_HEXADECIMAL_NUMBER)
+    @NotEmpty
+    @Pattern(regexp = IS_A_1_TO_4_DIGIT_HEXADECIMAL_NUMBER, message = "UnpredictableNumber must be between 1 to 4 hexadecimal digits long.")
     public String applicationTransactionCounter;
-    @Pattern(regexp = IS_VALID_IAD_FORMAT)
+    @NotEmpty
+    @Pattern(regexp = IS_VALID_IAD_FORMAT, message = "IssuerApplicationData must be between 1 to 64 hexadecimal digits long.")
     public String issuerApplicationData;
 
     /**
@@ -86,8 +105,10 @@ public class GenerateApplicationCryptogramCommand
         this.applicationInterchangeProfile = applicationInterchangeProfile;
         this.applicationTransactionCounter = applicationTransactionCounter;
         this.issuerApplicationData = issuerApplicationData;
+        // Call self validate
+        selfValidate();
         logInfo(log,
-                "Self validated object {}.",
+                "Self validation successful for object {}.",
                 this
         );
     }

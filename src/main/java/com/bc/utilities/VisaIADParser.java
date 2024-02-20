@@ -51,7 +51,7 @@ public class VisaIADParser
         // Call self validate
         selfValidate();
         logInfo(log,
-                "Self validated successful for object {}.",
+                "Self validation successful for object {}.",
                 this
         );
         // Initialise IAD data item names and lengths based on format
