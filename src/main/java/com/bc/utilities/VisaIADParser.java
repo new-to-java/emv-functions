@@ -8,6 +8,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import static com.bc.model.constants.IADStaticData.*;
+import static com.bc.model.constants.IADStaticData.VISA_CVR_STANDARD_LENGTH;
+
 /**
  * Class defining methods for parsing a Visa specific IAD and splitting the IAD into the following components.
  * - Length Indicator - Byte 1 - Set to "06" for Format 0/1/3 IAD and set to "1F" for Format 2 IAD.
@@ -29,7 +31,7 @@ public class VisaIADParser
     @NotEmpty
     @Pattern.List({
             @Pattern(regexp = VISA_IAD_STARTS_WITH_06_OR_1F, message = VISA_IAD_START_BYTE_ERROR),
-            @Pattern(regexp = VALID_IAD_FORMAT, message = IAD_FORMAT_ERROR)
+            @Pattern(regexp = VISA_VALID_IAD_FORMAT, message = VISA_IAD_FORMAT_ERROR)
     })
     private String issuerApplicationData;
     @Setter(AccessLevel.NONE)
@@ -41,6 +43,8 @@ public class VisaIADParser
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private boolean iadIsVisaFormat2;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private int lastProcessedOffset;
     /**
      * Constructor with Issuer Application Data (IAD).
@@ -50,7 +54,7 @@ public class VisaIADParser
         this.issuerApplicationData = issuerApplicationData;
         // Call self validate
         selfValidate();
-        logInfo(log,
+        logDebug(log,
                 "Self validation successful for object {}.",
                 this
         );
@@ -92,30 +96,30 @@ public class VisaIADParser
      * Check if the IAD is Format 2 by verifying the starting byte is set to "1F", if yes return true, else return false.
      */
     private boolean iadIsAVisaFormat2Iad(){
-        return issuerApplicationData.toUpperCase().startsWith(FORMAT_2_IAD_LENGTH);
+        return issuerApplicationData.toUpperCase().startsWith(VISA_FORMAT_2_IAD_LENGTH);
     }
     /**
      * Initialise the Visa IAD Data Names and Lengths map for Format 0/1/3 IAD data item names and lengths.
      */
     private void buildStandardIadDataNamesAndLengths() {
-        visaIadDataNamesAndLengths.put(IAD_LENGTH_NAME, IAD_LENGTH);
-        visaIadDataNamesAndLengths.put(DKI_NAME, DKI_LENGTH);
-        visaIadDataNamesAndLengths.put(CVN_NAME, CVN_LENGTH);
-        visaIadDataNamesAndLengths.put(CVR_NAME, CVR_STANDARD_LENGTH);
-        visaIadDataNamesAndLengths.put(IDD_LENGTH_NAME, IDD_LENGTH);
-        visaIadDataNamesAndLengths.put(IDD_OPTION_ID, IDD_OPTION_ID_LENGTH);
-        visaIadDataNamesAndLengths.put(IDD_NAME, 0);
+        visaIadDataNamesAndLengths.put(IAD_LENGTH_NAME, VISA_IAD_LENGTH);
+        visaIadDataNamesAndLengths.put(DKI_NAME, VISA_DKI_LENGTH);
+        visaIadDataNamesAndLengths.put(CVN_NAME, VISA_CVN_LENGTH);
+        visaIadDataNamesAndLengths.put(CVR_NAME, VISA_CVR_STANDARD_LENGTH);
+        visaIadDataNamesAndLengths.put(VISA_IDD_LENGTH_NAME, VISA_IDD_LENGTH);
+        visaIadDataNamesAndLengths.put(VISA_IDD_OPTION_ID, VISA_IDD_OPTION_ID_LENGTH);
+        visaIadDataNamesAndLengths.put(VISA_IDD_NAME, 0);
     }
     /**
      * Initialise the Visa IAD Data Names and Lengths map for Format 2 IAD data item names and lengths.
      */
     private void buildFormat2IadDataNamesAndLengths() {
-        visaIadDataNamesAndLengths.put(IAD_LENGTH_NAME, IAD_LENGTH);
-        visaIadDataNamesAndLengths.put(CVN_NAME, CVN_LENGTH);
-        visaIadDataNamesAndLengths.put(DKI_NAME, DKI_LENGTH);
-        visaIadDataNamesAndLengths.put(CVR_NAME, CVR_FORMAT2_LENGTH);
-        visaIadDataNamesAndLengths.put(IDD_OPTION_ID, IDD_OPTION_ID_LENGTH);
-        visaIadDataNamesAndLengths.put(IDD_NAME, 0);
+        visaIadDataNamesAndLengths.put(IAD_LENGTH_NAME, VISA_IAD_LENGTH);
+        visaIadDataNamesAndLengths.put(CVN_NAME, VISA_CVN_LENGTH);
+        visaIadDataNamesAndLengths.put(DKI_NAME, VISA_DKI_LENGTH);
+        visaIadDataNamesAndLengths.put(CVR_NAME, VISA_CVR_FORMAT2_LENGTH);
+        visaIadDataNamesAndLengths.put(VISA_IDD_OPTION_ID, VISA_IDD_OPTION_ID_LENGTH);
+        visaIadDataNamesAndLengths.put(VISA_IDD_NAME, 0);
     }
     /**
      * Common parser logic for performing the initial parsing of a Visa IAD into Visa Discretionary Data (VDD) components.
@@ -152,18 +156,18 @@ public class VisaIADParser
         if (issuerApplicationData.length() > lastProcessedOffset){
             // Process Visa Format 2 IAD for extracting IDD
             if (iadIsVisaFormat2){
-                String iddOptionId = parsedIadDataItems.get(IDD_OPTION_ID);
+                String iddOptionId = parsedIadDataItems.get(VISA_IDD_OPTION_ID);
                 parsedIadDataItems.put(
-                        IDD_NAME,
+                        VISA_IDD_NAME,
                         iddOptionId +
                         issuerApplicationData.substring(lastProcessedOffset)
                 );
                 // Process Visa Format 0/1/3 IAD for extracting IDD
             } else {
-                String iddLength = parsedIadDataItems.get(IDD_LENGTH_NAME);
-                String iddOptionId = parsedIadDataItems.get(IDD_OPTION_ID);
+                String iddLength = parsedIadDataItems.get(VISA_IDD_LENGTH_NAME);
+                String iddOptionId = parsedIadDataItems.get(VISA_IDD_OPTION_ID);
                 parsedIadDataItems.put(
-                        IDD_NAME,
+                        VISA_IDD_NAME,
                         iddLength +
                         iddOptionId +
                         issuerApplicationData.substring(lastProcessedOffset)
@@ -176,12 +180,12 @@ public class VisaIADParser
      * @param parsedIadDataItems Map of parsed IAD with IDD option ID.
      */
     private void overlayIddOptionIdWithRightNibbleOfIddOptionId(Map<String, String> parsedIadDataItems){
-        if (parsedIadDataItems.containsKey(IDD_OPTION_ID)){
+        if (parsedIadDataItems.containsKey(VISA_IDD_OPTION_ID)){
             parsedIadDataItems.put(
-                    IDD_OPTION_ID,
+                    VISA_IDD_OPTION_ID,
                     String.valueOf(
                             parsedIadDataItems.get(
-                                    IDD_OPTION_ID
+                                    VISA_IDD_OPTION_ID
                                     ).charAt(1)
                     )
             );
@@ -194,7 +198,7 @@ public class VisaIADParser
     private void setIadFormatFromCvn(Map<String, String> parsedIadDataItems){
         if (parsedIadDataItems.containsKey(CVN_NAME)){
             parsedIadDataItems.put(
-                    IAD_FORMAT_NAME,
+                    VISA_IAD_FORMAT_NAME,
                     String.valueOf(
                             parsedIadDataItems.get(
                                     CVN_NAME
@@ -225,26 +229,32 @@ public class VisaIADParser
      * @return Generic CVN value.
      */
     private String translateVisaCvnToGenericCvn(String cvn){
+        // Constants
         final String CVN_PREFIX = "CVN";
         final String NUMBER_10 = "10";
         final String NUMBER_14 = "14";
         final String NUMBER_18 = "18";
+        final String VISA_CVN_10 = "0A";
+        final String VISA_CVN_14 = "0E";
+        final String VISA_CVN_18 = "12";
+        final String VISA_CVN_22 = "22";
+        final String VISA_CVN_2C = "2C";
+        // Logic
+        logDebug(log, "CVN Received: {}.", cvn.toUpperCase());
         switch (cvn.toUpperCase()){
-            case "0A":
-                logDebug(log, "CVN Received: {}.", cvn);
+            case VISA_CVN_10:
                 return CVN_PREFIX + NUMBER_10;
-            case "0E":
-                logDebug(log, "CVN Received: {}.", cvn);
+            case VISA_CVN_14:
                 return CVN_PREFIX + NUMBER_14;
-            case "12":
-                logDebug(log, "CVN Received: {}.", cvn);
+            case VISA_CVN_18:
                 return CVN_PREFIX + NUMBER_18;
-            case "22":
-            case "2C":
-                logDebug(log, "CVN Received: {}.", cvn);
+            case VISA_CVN_22:
+            case VISA_CVN_2C:
                 return CVN_PREFIX + cvn;
             default:
-                return null;
+                throw new IllegalStateException(this.getClass().getName() + " --> Unexpected value for CVN . " +
+                        "expected \"0A\", \"0E\", \"12\", \"22\", or \"2C\" but received " + cvn.toUpperCase() + "."
+                );
         }
     }
     /**

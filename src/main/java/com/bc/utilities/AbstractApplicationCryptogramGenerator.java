@@ -4,7 +4,6 @@ import com.bc.application.domain.CryptogramRequest;
 import com.bc.application.enumeration.CryptogramVersionNumber;
 import com.bc.application.enumeration.PaymentScheme;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
 

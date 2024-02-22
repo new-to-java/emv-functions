@@ -51,7 +51,7 @@ public class EMVUniqueDerivationKeyDerivator
         this.emvudkDerivationMethod = emvudkDerivationMethod;
         // Call self validate
         selfValidate();
-        logInfo(log,
+        logDebug(log,
                 "Self validation successful for object {}.",
                 this
         );
@@ -74,7 +74,7 @@ public class EMVUniqueDerivationKeyDerivator
 
         if (emvudkDerivationMethod.isMETHOD_A()) {
             logInfo(log,
-                    "UDK derivation using EMV Option A.",
+                    "UDK derived using EMV: Option A.",
                     emvudkDerivationMethod
             );
             return getUniqueDerivationKeyOptionA();

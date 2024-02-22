@@ -30,7 +30,7 @@ public class Xor
         this.result = new StringBuilder();
         // Call self validate
         selfValidate();
-        logInfo(log,
+        logDebug(log,
                 "Self validation successful for object {}.",
                 this
         );

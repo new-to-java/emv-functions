@@ -57,9 +57,8 @@ public class GenerateApplicationCryptogramCommand
     @Pattern(regexp = IS_A_1_TO_4_DIGIT_HEXADECIMAL_NUMBER, message = "UnpredictableNumber must be between 1 to 4 hexadecimal digits long.")
     public String applicationTransactionCounter;
     @NotEmpty
-    @Pattern(regexp = IS_VALID_IAD_FORMAT, message = "IssuerApplicationData must be between 1 to 64 hexadecimal digits long.")
+    @Pattern(regexp = IS_VALID_IAD_FORMAT, message = "IssuerApplicationData must be between 14 to 64 hexadecimal digits long, and contain an even number of hexadecimal digits.")
     public String issuerApplicationData;
-
     /**
      * All args constructor for creating GenerateApplicationCryptogramCommand
      * @param pan PAN.
@@ -107,7 +106,7 @@ public class GenerateApplicationCryptogramCommand
         this.issuerApplicationData = issuerApplicationData;
         // Call self validate
         selfValidate();
-        logInfo(log,
+        logDebug(log,
                 "Self validation successful for object {}.",
                 this
         );

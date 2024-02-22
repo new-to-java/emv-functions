@@ -45,7 +45,7 @@ public class TripleDES
         byte [] decodedInputData = decodeInputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
-        logInfo(log, "TDEA Encryption request processed!");
+        logDebug(log, "TDEA Encryption request processed!");
         logDebug(log, "Encrypted data: {}.", outputData);
         return outputData;
     }
@@ -58,7 +58,7 @@ public class TripleDES
         byte [] decodedInputData = decodeInputDataTextToByteArray();
         byte [] desEdeOutputData = runDESede(decodedInputData);
         outputData = Hex.encodeHexString(desEdeOutputData);
-        logInfo(log, "TDEA Decryption request processed!");
+        logDebug(log, "TDEA Decryption request processed!");
         logDebug(log, "Decrypted data: {}.", outputData);
         return outputData;
     }

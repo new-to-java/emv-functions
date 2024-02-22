@@ -12,13 +12,10 @@ public interface LoggerUtility {
     default void logDebug(Logger log,
                           String message,
                           Object... objectsToLog){
-        if (log.isDebugEnabled()) {
-            log.debug(this.getClass().getName() +
-                    " --> " +
-                    message,
-                    objectsToLog
-            );
-        }
+        log.debug(getUnqualifiedClassName() + " log --> " +
+                message,
+                objectsToLog
+        );
     }
     /**
      * Method for logging warning messages.
@@ -26,13 +23,10 @@ public interface LoggerUtility {
     default void logWarning(Logger log,
                             String message,
                             Object... objectsToLog){
-        if (log.isDebugEnabled()) {
-            log.debug(this.getClass().getName() +
-                    "--> " +
-                    message,
-                    objectsToLog
-            );
-        }
+        log.debug(getUnqualifiedClassName() + " log --> " +
+                message,
+                objectsToLog
+        );
     }
     /**
      * Method for logging informational messages.
@@ -40,12 +34,16 @@ public interface LoggerUtility {
     default void logInfo(Logger log,
                          String message,
                          Object... objectsToLog){
-        if (log.isDebugEnabled()) {
-            log.debug(this.getClass().getName() +
-                    " --> " +
-                    message,
-                    objectsToLog
-            );
-        }
+        log.info(getUnqualifiedClassName() + " log --> " +
+                message,
+                objectsToLog
+        );
+    }
+    /**
+     * Method to get unqualified class name, i.e., class name without the package prefix.
+     * @return Unqualified class name.
+     */
+    private String getUnqualifiedClassName(){
+        return getClass().getSimpleName();
     }
 }

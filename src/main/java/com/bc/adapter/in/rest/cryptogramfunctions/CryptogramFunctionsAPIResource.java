@@ -4,6 +4,7 @@ import com.bc.application.domain.CryptogramResponse;
 import com.bc.application.enumeration.PaymentScheme;
 import com.bc.application.port.in.rest.cryptogramfunctions.command.GenerateApplicationCryptogramCommand;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestToCommandMapper;
+import com.bc.application.service.impl.MastercardCryptogramFunctionsServiceImpl;
 import com.bc.application.service.impl.VisaCryptogramFunctionsServiceImpl;
 import com.bc.model.dto.GenerateACRequest;
 import com.bc.model.dto.GenerateACResponse;
@@ -14,7 +15,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.Objects;
 
 /**
@@ -23,9 +23,11 @@ import java.util.Objects;
 @ApplicationScoped
 @Slf4j
 public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
-    // Service - Pending build and injection
+    // Service
     @Inject
     VisaCryptogramFunctionsServiceImpl visaCryptogramService;
+    @Inject
+    MastercardCryptogramFunctionsServiceImpl mastercardCryptogramService;
     // Mappers
     @Inject
     GenerateACRequestToCommandMapper generateACRequestToCommandMapper;
@@ -39,7 +41,7 @@ public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
      * - Retrieve the core service's response and:
      *   - Builds a valid response payload, if generateAC was successful.
      *   - Builds an error response payload, if generateAC was unsuccessful.
-     * @param generateACRequest REST API request payload containing the GenerateAC request arributes.
+     * @param generateACRequest REST API request payload containing the GenerateAC request attributes.
      * @return REST API response payload or error response.
      */
     public Response generateApplicationCrptogram(GenerateACRequest generateACRequest){
@@ -89,7 +91,6 @@ public class CryptogramFunctionsAPIResource implements CryptogramFunctionsAPI {
      * Generate a Mastercard Payment Scheme specific application cryptogram.
      */
     private CryptogramResponse generateMastercardApplicationCryptogram(GenerateApplicationCryptogramCommand generateApplicationCryptogramCommand){
-        // TODO
-        return new CryptogramResponse();
+        return mastercardCryptogramService.getApplicationCryptogram(generateApplicationCryptogramCommand);
     }
 }

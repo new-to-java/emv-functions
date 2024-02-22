@@ -10,7 +10,11 @@ public enum CryptogramVersionNumber {
 
     CVN10("CVN10"),
     CVN14("CVN14"),
+    CVN16("CVN16"),
+    CVN17("CVN17"),
     CVN18("CVN18"),
+    CVN20("CVN20"),
+    CVN21("CVN21"),
     CVN22("CVN22"),
     CVN2C("CVN2C");
 
@@ -33,11 +37,43 @@ public enum CryptogramVersionNumber {
     }
 
     /**
+     * Method to check if the enum object value is set to CVN16.
+     * @return True when value is set to CVN16.
+     */
+    public boolean isCVN16(){
+        return this.equals(CVN16);
+    }
+
+    /**
+     * Method to check if the enum object value is set to CVN17.
+     * @return True when value is set to CVN17.
+     */
+    public boolean isCVN17(){
+        return this.equals(CVN17);
+    }
+
+    /**
      * Method to check if the enum object value is set to CVN18.
      * @return True when value is set to CVN18.
      */
     public boolean isCVN18(){
         return this.equals(CVN18);
+    }
+
+    /**
+     * Method to check if the enum object value is set to CVN20.
+     * @return True when value is set to CVN20.
+     */
+    public boolean isCVN20(){
+        return this.equals(CVN20);
+    }
+
+    /**
+     * Method to check if the enum object value is set to CVN21.
+     * @return True when value is set to CVN21.
+     */
+    public boolean isCVN21(){
+        return this.equals(CVN21);
     }
 
     /**

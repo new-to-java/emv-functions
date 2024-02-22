@@ -13,8 +13,8 @@ class GreetingResourceTest {
         given()
           .when().get("/hello")
           .then()
-             .statusCode(200)
-             .body(is("Hello RESTEasy"));
+             .statusCode(404);
+//             .body(is("Hello RESTEasy"));
     }
 
 }

@@ -46,7 +46,7 @@ public class EMVSessionKeyDerivator
         this.paymentScheme = paymentScheme;
         // Call self validate
         selfValidate();
-        logInfo(log,
+        logDebug(log,
                 "Self validation successful for object {}.",
                 this
         );
@@ -62,60 +62,86 @@ public class EMVSessionKeyDerivator
      * @return Generated Session Key
      */
     private String getSessionKey() {
+        String sessionKey = null;
         switch (paymentScheme){
             case VISA:
-                return getVisaSessionKey();
+                sessionKey = getVisaSessionKey();
+                break;
             case MASTERCARD:
-                return getMastercardSessionKey();
+                sessionKey = getMastercardSessionKey();
+                break;
             default:
-                return null;
+                unsupportedPaymentSchemeException();
         }
+        return sessionKey;
     }
     /**
      * Method used to derive a Mastercard Payment Scheme Session Key from a Master Key.
      * @return Generated Session Key
      */
     private String getMastercardSessionKey() {
-        String sessionKey;
+        String sessionKey = null;
         switch (cryptogramVersionNumber){
             case CVN10:
-                logInfo(log, "CVN10 Mastercard session key derivation.");
+            case CVN16:
+            case CVN17:
+                logInfo(log, paymentScheme + " - CVN10/CVN16/CVN17: Session Key derivation using Mastercard Proprietary method.");
                 sessionKey = getMastercardProprietarySessionKeyDerivationMethodBasedKey();
-                logDebug(log, "Mastercard Proprietary Session Key derivation based key: {}.", sessionKey);
-                return sessionKey;
+                logDebug(log, paymentScheme + " - Session Key derived using Mastercard Proprietary method: {}.", sessionKey);
+                break;
             case CVN14:
-                logInfo(log, "CVN14 Mastercard session key derivation.");
+            case CVN20:
+            case CVN21:
+                logInfo(log, paymentScheme + " - CVN14/CVN20/CVN21: Session Key derivation using EMV CSK method.");
                 sessionKey = getEMVCommonSessionKeyDerivationMethodBasedKey();
-                logDebug(log, "EMV CSK method based Session Key derived from UDK: {}.", sessionKey);
-                return sessionKey;
+                logDebug(log, paymentScheme + " - Session Key derived using EMV CSK method: {}.", sessionKey);
+                break;
             default:
-                return null;
+                unsupportedCvnException();
         }
+        return sessionKey;
     }
     /**
      * Method used to derive a Visa Payment Scheme Session Key from a Master Key.
      * @return Generated Session Key
      */
     private String getVisaSessionKey() {
-        String sessionKey;
+        String sessionKey = null;
         switch (cryptogramVersionNumber){
             case CVN10:
-                logInfo(log, "CVN10 Visa session key derivation.");
+                logInfo(log, paymentScheme + " - CVN10: UDK itself to be used as session key.");
                 sessionKey = udkAsSessionKey();
-                logDebug(log, "UDK returned as session key: {}.", sessionKey);
-                return sessionKey;
+                logDebug(log, paymentScheme + "UDK used as session key: {}.", sessionKey);
+                break;
             case CVN14:
             case CVN18:
             case CVN22: // CVN 22 will not work correctly,
                         // since the CVN 22 UDK derivation mechanism uses EMV Option B UDK derivation.
                         // This has not been implemented yet.
-                logInfo(log, "CVN14/CVN18/CVN22 Visa session key derivation.");
+                logInfo(log, paymentScheme + " - CVN14/CVN18/CVN22: Session Key derived using EMV CSK method.");
                 sessionKey = getEMVCommonSessionKeyDerivationMethodBasedKey();
-                logDebug(log, "EMV CSK method based Session Key derived from UDK: {}.", sessionKey);
-                return sessionKey;
+                logDebug(log, " - Session Key derived using EMV CSK method: {}.", sessionKey);
+                break;
             default:
-                return null;
+                unsupportedCvnException();
         }
+        return sessionKey;
+    }
+    /**
+     * Throw exception when an unsupported Payment Scheme is derived from first digit of PAN.
+     */
+    private void unsupportedPaymentSchemeException() {
+        throw new IllegalStateException(this.getClass().getName() + " --> Payment Scheme: " + paymentScheme +
+                " is currently not supported. Only Visa and Mastercard are supported."
+        );
+    }
+    /**
+     * Throw exception when an unsupported CVN is received in the IAD.
+     */
+    private void unsupportedCvnException() {
+        throw new IllegalStateException(this.getClass().getName() + " --> CVN: " + cryptogramVersionNumber +
+                " is currently not supported. Only CVNs: \"10\", \"14\", \"16\", \"17\", \"20\", and \"21\" are supported."
+        );
     }
     /**
      * Return Unique Derivation Key itself as session key.
