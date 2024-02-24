@@ -18,14 +18,6 @@ public class IADStaticData {
     //-----------------------------------------------------------------------------------------------------------------
     //                                                   Constants
     //-----------------------------------------------------------------------------------------------------------------
-    // Visa Integer constants
-    public final static int VISA_IAD_LENGTH = 2; // Length of Visa Discretionary Data for Format 0/1/3 IAD or total length of IAD for Format 2
-    public final static int VISA_DKI_LENGTH = 2; // Length of Derivation Key Index
-    public final static int VISA_CVN_LENGTH = 2; // Length of Cryptogram Version Number
-    public final static int VISA_CVR_STANDARD_LENGTH = 8; // Length of Card Verification Results for standard IAD
-    public final static int VISA_CVR_FORMAT2_LENGTH = 10; // Length of Card Verification Results for format 2 IAD
-    public final static int VISA_IDD_LENGTH = 2; // Length of Issuer Discretionary Data for a Format 0/1/3 IAD
-    public final static int VISA_IDD_OPTION_ID_LENGTH = 2; // Length of Issuer Discretionary Data Option ID
     // Mastercard Integer constants
     public final static int MASTECARD_DKI_LENGTH = 2; // Length of Derivation Key Index
     public final static int MASTERCARD_CVN_LENGTH = 2; // Length of Cryptogram Version Number
@@ -36,15 +28,11 @@ public class IADStaticData {
     public final static int MASTERCARD_ENCRYPTED_COUNTERS_LENGTH = 32; // Length of encrypted offline counters
     public final static int MASTERCARD_LAST_ONLINE_ATC_LENGTH = 4; // Length of last online ATC
     // Common String constants
-    public final static String IAD_LENGTH_NAME = "Length";
     public final static String DKI_NAME = "DKI";
     public final static String CVN_NAME = "CVN";
     public final static String CVR_NAME = "CVR";
     // Visa String constants
     public final static String VISA_FORMAT_2_IAD_LENGTH = "1F";
-    public final static String VISA_IDD_LENGTH_NAME = "IddLength";
-    public final static String VISA_IDD_OPTION_ID = "IddOptionId";
-    public final static String VISA_IDD_NAME = "IDD";
     public final static String VISA_IAD_FORMAT_NAME = "IADFormat";
     // Mastercard String constants
     public final static String MASTERCARD_DAC_ICC_NAME = "DAC/ICC";

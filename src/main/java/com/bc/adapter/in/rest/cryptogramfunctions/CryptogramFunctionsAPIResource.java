@@ -2,6 +2,7 @@ package com.bc.adapter.in.rest.cryptogramfunctions;
 
 import com.bc.application.domain.CryptogramResponse;
 import com.bc.application.enumeration.PaymentScheme;
+import com.bc.application.enumeration.VisaIadElements;
 import com.bc.application.port.in.rest.cryptogramfunctions.command.GenerateApplicationCryptogramCommand;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACRequestToCommandMapper;
 import com.bc.application.service.impl.MastercardCryptogramFunctionsServiceImpl;
@@ -11,10 +12,13 @@ import com.bc.model.dto.GenerateACResponse;
 import com.bc.application.port.in.rest.cryptogramfunctions.mapper.GenerateACDomainToResponseMapper;
 import com.bc.application.port.in.rest.cryptogramfunctions.client.CryptogramFunctionsAPI;
 import com.bc.utilities.DeterminePaymentScheme;
+import com.bc.utilities.VisaIADParser;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 import java.util.Objects;
 
 /**

@@ -1,5 +1,6 @@
 package com.bc.utilities;
 
+import com.bc.application.enumeration.VisaIadElements;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
@@ -8,8 +9,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import static com.bc.model.constants.IADStaticData.*;
-import static com.bc.model.constants.IADStaticData.VISA_CVR_STANDARD_LENGTH;
-
 /**
  * Class defining methods for parsing a Visa specific IAD and splitting the IAD into the following components.
  * - Length Indicator - Byte 1 - Set to "06" for Format 0/1/3 IAD and set to "1F" for Format 2 IAD.
@@ -54,15 +53,10 @@ public class VisaIADParser
         this.issuerApplicationData = issuerApplicationData;
         // Call self validate
         selfValidate();
+        iadIsVisaFormat2 = iadIsAVisaFormat2Iad();
         logDebug(log,
                 "Self validation successful for object {}.",
                 this
-        );
-        // Initialise IAD data item names and lengths based on format
-        initialiseIadDataItemLengths();
-        logDebug(log,
-                "Initialized item lengths {}.",
-                visaIadDataNamesAndLengths
         );
     }
     /**
@@ -81,45 +75,10 @@ public class VisaIADParser
         return parsedIssuerApplicationData;
     }
     /**
-     * Initialise the visaIadDataItemsLength tree map with the data items as keys and lengths as values.
-     */
-    private void initialiseIadDataItemLengths(){
-        iadIsVisaFormat2 = iadIsAVisaFormat2Iad();
-        if (iadIsVisaFormat2){
-            buildFormat2IadDataNamesAndLengths();
-        } else {
-            buildStandardIadDataNamesAndLengths();
-        }
-        logDebug(log, "Visa Format 2 IAD: {}.", iadIsVisaFormat2);
-    }
-    /**
      * Check if the IAD is Format 2 by verifying the starting byte is set to "1F", if yes return true, else return false.
      */
     private boolean iadIsAVisaFormat2Iad(){
         return issuerApplicationData.toUpperCase().startsWith(VISA_FORMAT_2_IAD_LENGTH);
-    }
-    /**
-     * Initialise the Visa IAD Data Names and Lengths map for Format 0/1/3 IAD data item names and lengths.
-     */
-    private void buildStandardIadDataNamesAndLengths() {
-        visaIadDataNamesAndLengths.put(IAD_LENGTH_NAME, VISA_IAD_LENGTH);
-        visaIadDataNamesAndLengths.put(DKI_NAME, VISA_DKI_LENGTH);
-        visaIadDataNamesAndLengths.put(CVN_NAME, VISA_CVN_LENGTH);
-        visaIadDataNamesAndLengths.put(CVR_NAME, VISA_CVR_STANDARD_LENGTH);
-        visaIadDataNamesAndLengths.put(VISA_IDD_LENGTH_NAME, VISA_IDD_LENGTH);
-        visaIadDataNamesAndLengths.put(VISA_IDD_OPTION_ID, VISA_IDD_OPTION_ID_LENGTH);
-        visaIadDataNamesAndLengths.put(VISA_IDD_NAME, 0);
-    }
-    /**
-     * Initialise the Visa IAD Data Names and Lengths map for Format 2 IAD data item names and lengths.
-     */
-    private void buildFormat2IadDataNamesAndLengths() {
-        visaIadDataNamesAndLengths.put(IAD_LENGTH_NAME, VISA_IAD_LENGTH);
-        visaIadDataNamesAndLengths.put(CVN_NAME, VISA_CVN_LENGTH);
-        visaIadDataNamesAndLengths.put(DKI_NAME, VISA_DKI_LENGTH);
-        visaIadDataNamesAndLengths.put(CVR_NAME, VISA_CVR_FORMAT2_LENGTH);
-        visaIadDataNamesAndLengths.put(VISA_IDD_OPTION_ID, VISA_IDD_OPTION_ID_LENGTH);
-        visaIadDataNamesAndLengths.put(VISA_IDD_NAME, 0);
     }
     /**
      * Common parser logic for performing the initial parsing of a Visa IAD into Visa Discretionary Data (VDD) components.
@@ -127,25 +86,73 @@ public class VisaIADParser
      */
     private Map<String, String> parseIadIntoDataItems(){
         Map<String, String> parsedIadDataItems = new LinkedHashMap<>();
+        Iterator<VisaIadElements> visaIadElementsIterator =  Arrays.stream(VisaIadElements.values()).iterator();
+        extractVisaIadComponents(visaIadElementsIterator, parsedIadDataItems);
+        return parsedIadDataItems;
+    }
+    /**
+     * Parse Visa IAD and extract data items.
+     * @param parsedIadDataItems Map containing parsed IAD data items.
+     */
+    private void extractVisaIadComponents(Iterator<VisaIadElements> visaIadElementsIterator, Map<String, String> parsedIadDataItems) {
+
         int startingOffset = 0;
-        // Iterate through each Visa IAD data item, length pair and parse IAD
-        for (Map.Entry<String, Integer> iadDataItem : visaIadDataNamesAndLengths.entrySet()) {
-            if (issuerApplicationData.length() >= startingOffset
-                    + iadDataItem.getValue()) {
-                parsedIadDataItems.put(
-                        iadDataItem.getKey(),
+        VisaIadElements visaIadElement;
+
+        while (visaIadElementsIterator.hasNext()){
+            visaIadElement = visaIadElementsIterator.next();
+            if (skipProcessingElement(visaIadElement)) {
+                continue;
+            }
+            extractIadElement(parsedIadDataItems, startingOffset, visaIadElement);
+            startingOffset += visaIadElement.getLength();
+        }
+        lastProcessedOffset = startingOffset;
+    }
+    /**
+     * Depending on IAD format, skip processing elements that are not relevant for a given IAD format.
+     * @param visaIadElement Next element from the enum class.
+     * @return True if element is not relevant for IAD format, else return false.
+     */
+    private boolean skipProcessingElement(VisaIadElements visaIadElement) {
+        switch (visaIadElement) {
+            case DKI:
+            case CVN:
+            case CVR:
+            case IDD_LENGTH:
+                if (iadIsVisaFormat2) {
+                    return true;
+                }
+                break;
+            case DKI_FMT2:
+            case CVN_FMT_2:
+            case CVR_FMT_2:
+                if (!iadIsVisaFormat2) {
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+    /**
+     * Extract a specific IAD element from the IAD
+     * @param parsedIadDataItems Extract a specific IAD element from the IAD.
+     * @param startingOffset Starting offset to extract the next element.
+     * @param visaIadElement Next element to extract.
+     */
+    private void extractIadElement(Map<String, String> parsedIadDataItems, int startingOffset, VisaIadElements visaIadElement) {
+        if (issuerApplicationData.length() >= (startingOffset + visaIadElement.getLength())) {
+            if (visaIadElement.equals(VisaIadElements.IDD)){
+                parsedIadDataItems.put(visaIadElement.getLabel(),
+                        issuerApplicationData.substring(startingOffset));
+            } else {
+                parsedIadDataItems.put(visaIadElement.getLabel(),
                         issuerApplicationData.substring(
                                 startingOffset,
-                                startingOffset +
-                                iadDataItem.getValue()
-                        )
-                );
-                startingOffset += iadDataItem.getValue();
+                                startingOffset + visaIadElement.getLength()));
             }
         }
-        // Set last processed offset to class variable for later reference
-        lastProcessedOffset = startingOffset;
-        return parsedIadDataItems;
+        log.debug("Parsed IAD: " + parsedIadDataItems);
     }
     /**
      * Check if Issuer Discretionary Data (IDD) is available in IAD and parse it.
@@ -153,39 +160,26 @@ public class VisaIADParser
      */
     private void parseIddIfAvailableInIad(Map<String, String> parsedIadDataItems){
         // Check if IDD is available in IAD, extract IDD
-        if (issuerApplicationData.length() > lastProcessedOffset){
-            // Process Visa Format 2 IAD for extracting IDD
-            if (iadIsVisaFormat2){
-                String iddOptionId = parsedIadDataItems.get(VISA_IDD_OPTION_ID);
-                parsedIadDataItems.put(
-                        VISA_IDD_NAME,
-                        iddOptionId +
-                        issuerApplicationData.substring(lastProcessedOffset)
-                );
-                // Process Visa Format 0/1/3 IAD for extracting IDD
-            } else {
-                String iddLength = parsedIadDataItems.get(VISA_IDD_LENGTH_NAME);
-                String iddOptionId = parsedIadDataItems.get(VISA_IDD_OPTION_ID);
-                parsedIadDataItems.put(
-                        VISA_IDD_NAME,
-                        iddLength +
-                        iddOptionId +
-                        issuerApplicationData.substring(lastProcessedOffset)
-                );
-            }
+        String idd = "";
+        if (!iadIsVisaFormat2) {
+            idd = parsedIadDataItems.get(VisaIadElements.IDD_LENGTH.getLabel());
         }
+        idd = idd + parsedIadDataItems.get(VisaIadElements.IDD_OPTION_ID.getLabel()) +
+        parsedIadDataItems.get(VisaIadElements.IDD.getLabel());
+        parsedIadDataItems.put(VisaIadElements.IDD.getLabel(), idd);
     }
     /**
      * Extract right nibble from the current value assigned to the key "IddOptionId", and overlay the value of the same key.
      * @param parsedIadDataItems Map of parsed IAD with IDD option ID.
      */
     private void overlayIddOptionIdWithRightNibbleOfIddOptionId(Map<String, String> parsedIadDataItems){
-        if (parsedIadDataItems.containsKey(VISA_IDD_OPTION_ID)){
+        String iddOptionIdLabel = VisaIadElements.IDD_OPTION_ID.getLabel();
+        if (parsedIadDataItems.containsKey(iddOptionIdLabel)){
             parsedIadDataItems.put(
-                    VISA_IDD_OPTION_ID,
+                    iddOptionIdLabel,
                     String.valueOf(
                             parsedIadDataItems.get(
-                                    VISA_IDD_OPTION_ID
+                                    iddOptionIdLabel
                                     ).charAt(1)
                     )
             );
@@ -196,18 +190,17 @@ public class VisaIADParser
      * @param parsedIadDataItems Map of parsed IAD with IAD Format value.
      */
     private void setIadFormatFromCvn(Map<String, String> parsedIadDataItems){
-        if (parsedIadDataItems.containsKey(CVN_NAME)){
+        if (parsedIadDataItems.containsKey(VisaIadElements.CVN.getLabel())){
             parsedIadDataItems.put(
                     VISA_IAD_FORMAT_NAME,
                     String.valueOf(
                             parsedIadDataItems.get(
-                                    CVN_NAME
+                                    VisaIadElements.CVN.getLabel()
                             ).charAt(0)
                     )
             );
         }
     }
-
     /**
      * Update the Parsed IAD Map with the generic CVN value determined.
      * @param cvn CVN value extracted from IAD.
@@ -266,7 +259,6 @@ public class VisaIADParser
         return "{" +
                 "issuerApplicationData='" + issuerApplicationData + '\'' +
                 "parsedIssuerApplicationData='" + parsedIssuerApplicationData + '\'' +
-                "visaIadDataNamesAndLengths='" + visaIadDataNamesAndLengths + '\'' +
                 "iadIsVisaFormat2='" + iadIsVisaFormat2 + '\'' +
                 "lastProcessedOffset='" + lastProcessedOffset + '\'' +
                 '}';
