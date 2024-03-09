@@ -182,7 +182,7 @@ public abstract class AbstractApplicationCryptogramGenerator
      */
     private String generateArqc(String formattedTransactionData,
                                 String sessionKey) {
-        List<String> splitArqcData = splitTransactionData(formattedTransactionData);
+//        List<String> splitArqcData = splitTransactionData(formattedTransactionData);
         String sessionKeyA = sessionKey
                 .substring(0,
                         16
@@ -191,24 +191,29 @@ public abstract class AbstractApplicationCryptogramGenerator
                 .substring(16,
                         32
                 );
-        int loopCounter = 0;
-        String encryptedData = null;
-        for (String arqcData : splitArqcData) {
-            // Skip XOR operation for first segment of ARQC data.
-            if (loopCounter == 0) {
-                encryptedData = tripleDESEncrypt(arqcData,
-                        sessionKeyA
-                );
-            } else { // Perform XOR operation with previously encrypted data segment for all remaining segments, prior to doing encryption.
-                encryptedData = performXor(encryptedData,
-                        arqcData
-                );
-                encryptedData = tripleDESEncrypt(encryptedData,
-                        sessionKeyA
-                );
-            }
-            loopCounter += 1;
-        }
+        String encryptedData = encryptArqcData(formattedTransactionData,
+                "0".repeat(16),
+                sessionKeyA,
+                0);
+        logDebug(log, "==========> Last encrypted block returned: {}.", encryptedData);
+//        int loopCounter = 0;
+//        String encryptedData = null;
+//        for (String arqcData : splitArqcData) {
+//            // Skip XOR operation for first segment of ARQC data.
+//            if (loopCounter == 0) {
+//                encryptedData = tripleDESEncrypt(arqcData,
+//                        sessionKeyA
+//                );
+//            } else { // Perform XOR operation with previously encrypted data segment for all remaining segments, prior to doing encryption.
+//                encryptedData = performXor(encryptedData,
+//                        arqcData
+//                );
+//                encryptedData = tripleDESEncrypt(encryptedData,
+//                        sessionKeyA
+//                );
+//            }
+//            loopCounter += 1;
+//        }
         // All data segments have been processed, now decrypt the encryptedData using sessionKeyB
         encryptedData = tripleDESDecrypt(encryptedData,
                 sessionKeyB
@@ -224,10 +229,36 @@ public abstract class AbstractApplicationCryptogramGenerator
         return encryptedData;
     }
     /**
+     * Recursive processing for ARQC data blocks for encryption using Session Key A
+     * @param arqcData Arqc data to be encrypted.
+     * @param lastEncryptedBlock Last encrypted block, initially set to "0000000000000000" by caller.
+     * @param sessionKeyA Session Key A.
+     * @param startOffset Starting offset for arqc data block extraction, initially set to 0 by caller.
+     * @return
+     */
+    private String encryptArqcData(String arqcData, String lastEncryptedBlock, String sessionKeyA, int startOffset) {
+        if (startOffset < arqcData.length()) {
+            String blockToEncrypt = splitTransactionData(arqcData, startOffset);
+            startOffset += 16;
+            blockToEncrypt = performXor(lastEncryptedBlock,
+                    blockToEncrypt
+            );
+            lastEncryptedBlock = tripleDESEncrypt(blockToEncrypt,
+                    sessionKeyA
+            );
+            lastEncryptedBlock = encryptArqcData(arqcData, lastEncryptedBlock, sessionKeyA, startOffset);
+        }
+        return lastEncryptedBlock;
+    }
+    /**
      * Split transaction data into 8 byte blocks/16 hexadecimal characters each.
      * @param formattedTransactionData ISO/IEC-9797 formatted transaction data.
      * @return Transaction data split into 8 byte blocks/16 hexadecimal characters.
      */
+    private String splitTransactionData(String formattedTransactionData, int startOffset) {
+        logDebug(log, "startOffset: {}, Substring: {}.", startOffset, formattedTransactionData.substring(startOffset, startOffset + 16));
+        return formattedTransactionData.substring(startOffset, startOffset + 16);
+    }
     private List<String> splitTransactionData(String formattedTransactionData){
         List<String> splitTransactionData = new ArrayList<>();
         int stringLength = formattedTransactionData.length();

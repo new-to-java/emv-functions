@@ -1,5 +1,7 @@
 package com.bc.utilities;
 
+import java.util.Objects;
+
 /**
  * Class defining methods used to pad a string.
  */
